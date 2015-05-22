@@ -204,7 +204,7 @@ public Action:StartCrab(Handle:timer) {
 
 public DenyCrab(client) {
 	ForcePlayerSuicide(client);
-	PrintCenterText(client, "A tournament is already under way");
+	PrintCenterText(client, "TESTSA tournament is already under way");
 }
 
 public ResetVars(client) {
