@@ -31,6 +31,10 @@ public OnPluginStart() {
 	}
 }
 
+public OnMapStart() {
+	g_SpycrabEventStatus = 0;
+}
+
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
 	new i = -1;
 	decl String:strName[50];
