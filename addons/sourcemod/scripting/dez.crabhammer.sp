@@ -171,7 +171,7 @@ public Action:CountdownFive(Handle:timer) {
 }
 
 public Action:StartCrab(Handle:timer) {
-	if(g_SpycrabEventStatus == 2) {
+	if(g_SpycrabEventStatus > 2) {
 		PrintToChatAll("Crabbing");
 		for(new client=0; client<MaxClients; client++) {
 			if(IsValidClient(client)) {
@@ -189,7 +189,7 @@ public Action:StartCrab(Handle:timer) {
 }
 
 public Action:HandleCrabs(Handle:timer) {
-	new counter = 0;
+	new counter = 0; //Stores how many players will die
 	for(new client=0; client<MaxClients; client++) {
 		if(g_SpycrabEventStatus == 2) {
 			if(g_Spycrabs[client] > 0) {
@@ -202,80 +202,81 @@ public Action:HandleCrabs(Handle:timer) {
 		}
 	}
 	new remainingPlayers = g_PlayersInSpycrab - counter;
-	if(g_SpycrabEventStatus == 2) {
-		if(remainingPlayers == 2) {
-			decl String:strName[50];
-			new offset = 0;
-			while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
-				GetEntPropString(i, Prop_Data, "m_iName", strName, sizeof(strName));
-				if(strcmp(strName, "wincrabHammer1") == 0) {
-					new Float:pos[3];
-					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
-					for(new client=offset; client<MaxClients; client++) {
-						if(g_Spycrabs[client] == 0) {
-							if(IsValidClient(client)) {
-								TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
-								offset = client+1;
-							}
-						}
-					}
-				} else if(strcmp(strName, "wincrabHammer2") == 0) {
-					new Float:pos[3];
-					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
-					for(new client=offset; client<MaxClients; client++) {
-						if(g_Spycrabs[client] == 0) {
-							if(IsValidClient(client)) {
-								TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
-								offset = client+1;
-							}
+	if(remainingPlayers < 3) {
+		if(g_SpycrabEventStatus == 2) {
+			if(remainingPlayers == 2) {
+				new winnerOne = -1, winnerTwo = -1;
+				for(new client=0; client<MaxClients; client++) {
+					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+						if(winnerOne == -1) {
+							winnerOne = client;
+						} else {
+							winnerTwo = client;
 						}
 					}
 				}
-			}
-			g_SpycrabEventStatus = 3;
-		} else if(remainingPlayers == 1) {
-			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
-					SpycrabWinner(client);
+				decl String:strName[50];
+				new entity = -1;
+				while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
+					GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+					if(strcmp(strName, "wincrabHammer1") == 0) {
+						new Float:pos[3];
+						GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+						if(IsValidClient(winnerOne)) {
+							TeleportEntity(winnerOne, pos, NULL_VECTOR, NULL_VECTOR);
+						}
+					} else if(strcmp(strName, "wincrabHammer2") == 0) {
+						new Float:pos[3];
+						GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+						if(IsValidClient(winnerTwo)) {
+							TeleportEntity(winnerTwo, pos, NULL_VECTOR, NULL_VECTOR);
+						}
+					}
 				}
-			}
-			g_SpycrabEventStatus = 0;
-		} else if(remainingPlayers < 1) {
-			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabbing[client]) {
-					PrintCenterText(client, "Don't buy a lottery ticket..");
+				g_SpycrabEventStatus = 3;
+			} else if(remainingPlayers == 1) {
+				for(new client=0; client<MaxClients; client++) {
+					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+						SpycrabWinner(client);
+					}
 				}
+				g_SpycrabEventStatus = 0;
+			} else if(remainingPlayers < 1) {
+				for(new client=0; client<MaxClients; client++) {
+					if(g_Spycrabbing[client]) {
+						PrintCenterText(client, "Don't buy a lottery ticket..");
+					}
+				}
+				g_SpycrabEventStatus = 0;
 			}
-			g_SpycrabEventStatus = 0;
-		}
-		for(new client=0; client<MaxClients; client++) {
-			if(g_Spycrabs[client] > 0) {
-				ForcePlayerSuicide(client);
-			}
-		}
-	} else if(g_SpycrabEventStatus == 3) {
-		if(remainingPlayers == 1) {
 			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabs[client] == 3) {
+				if(g_Spycrabs[client] > 0) {
 					ForcePlayerSuicide(client);
-				} else if(g_Spycrabbing[client] && g_Spycrabs[client] < 3) {
-					SpycrabWinner(client);
 				}
 			}
-		} else if(remainingPlayers == 0) {
-			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabs[client] == 3) {
-					PrintCenterText(client, "Don't buy a lottery ticket..");
-					ForcePlayerSuicide(client);
+		} else if(g_SpycrabEventStatus == 3) { //Showdown mode
+			if(remainingPlayers == 1) {
+				for(new client=0; client<MaxClients; client++) {
+					if(g_Spycrabs[client] == 3) {
+						ForcePlayerSuicide(client);
+					} else if(g_Spycrabbing[client] && g_Spycrabs[client] < 3) {
+						SpycrabWinner(client);
+					}
+				}
+			} else if(remainingPlayers == 0) {
+				for(new client=0; client<MaxClients; client++) {
+					if(g_Spycrabs[client] == 3) {
+						PrintCenterText(client, "Don't buy a lottery ticket..");
+						ForcePlayerSuicide(client);
+					}
 				}
 			}
 		}
 	}
-	
 }
 
 public SpycrabWinner(client) {
-
+	PrintToChatAll("%d won", client);
 }
 
 public DenyCrab(client) {
