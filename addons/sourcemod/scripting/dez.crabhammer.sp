@@ -136,6 +136,8 @@ public ModifyCrabEvent() {
 }
 
 public Action:CountdownMessage(Handle:timer, any:counter) {
+	CreateTimer(5.0, StartCountdownFive);
+	/*
 	if(counter == 0) {
 		PrintHudCentreText("Say !teleport to move to the arena and accept the crab king's challenge", 8.0);
 		CreateTimer(10.0, CountdownMessage, 1);
@@ -145,7 +147,7 @@ public Action:CountdownMessage(Handle:timer, any:counter) {
 	} else if(counter == 2) {
 		PrintHudCentreText("30 seconds remaining", 4.0);
 		CreateTimer(25.0, StartCountdownFive);
-	}
+	}*/
 }
 
 public Action:StartCountdownFive(Handle:timer) {
@@ -171,7 +173,7 @@ public Action:CountdownFive(Handle:timer) {
 }
 
 public Action:StartCrab(Handle:timer) {
-	if(g_SpycrabEventStatus > 2) {
+	if(g_SpycrabEventStatus > 1) {
 		PrintToChatAll("Crabbing");
 		for(new client=0; client<MaxClients; client++) {
 			if(IsValidClient(client)) {
@@ -287,7 +289,7 @@ public DenyCrab(client) {
 public ResetVars(client) {
 	g_Spycrabbing[client] = false;
 	g_AllowTaunt[client] = false;
-	g_Spycrabs[client] = 0;
+	g_Spycrabs[client] = 0;	
 }
 
 //Stocks
