@@ -12,7 +12,6 @@ new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
 
-
 new Handle:gHud;
 
 public OnPluginStart() {
@@ -21,7 +20,11 @@ public OnPluginStart() {
 	HookEvent("player_death", Event_PlayerDeath);
 	AddCommandListener(Event_Taunt, "taunt");
 	AddCommandListener(Event_Taunt, "+taunt");
-	
+
+	AddCommandListener(DoSuicide, "explode");
+	AddCommandListener(DoSuicide, "kill");
+	AddCommandListener(DoSuicide, "jointeam");
+
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
 	
@@ -60,6 +63,17 @@ public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	}
 	return Plugin_Continue;
 }
+
+public Action:DoSuicide(client, const String:sCommand[], args)
+{
+    if(IsValidClient(client)) {
+		if(g_Spycrabbing[client]) {
+			return Plugin_Handled;
+		}
+	}
+    return Plugin_Continue;
+}
+
 
 public OnEntityCreated(entity, const String:classname[]) {
     if(StrEqual(classname, "instanced_scripted_scene", false)) {
@@ -103,7 +117,6 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
 		LeaveCrab(client);
 	}
 }
-
 
 public JoinCrab(client) {
 	if(!g_Spycrabbing[client]) {
@@ -160,6 +173,15 @@ public Action:CountdownFive(Handle:timer) {
 		counter = 5;
 		g_SpycrabEventStatus = 2;
 		CreateTimer(7.0, StartCrab, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		
+		for(new client=0; client<MaxClients; client++) {
+			if(IsValidClient(client)) {
+				if(g_Spycrabbing[client]) {
+					SetEntityMoveType(client, MOVETYPE_NONE);
+				}
+			}
+		}
+		
 		return Plugin_Stop;
 	}
 	
@@ -174,7 +196,6 @@ public Action:CountdownFive(Handle:timer) {
 
 public Action:StartCrab(Handle:timer) {
 	if(g_SpycrabEventStatus > 1) {
-		PrintToChatAll("Crabbing");
 		for(new client=0; client<MaxClients; client++) {
 			if(IsValidClient(client)) {
 				if(g_Spycrabbing[client]) {
@@ -311,7 +332,8 @@ public EndCrab() {
 public ResetVars(client) {
 	g_Spycrabbing[client] = false;
 	g_AllowTaunt[client] = false;
-	g_Spycrabs[client] = 0;	
+	g_Spycrabs[client] = 0;
+	SetEntityMoveType(client, MOVETYPE_WALK);
 }
 
 //Stocks
