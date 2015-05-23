@@ -102,18 +102,18 @@ public OnStartTouchCrab(entity, client) {
 
 public OnStopTouchCrab(entity, client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
-		LeaveCrab(client);
+		LeaveCrab(client, false);
 	}
 }
 
 public OnClientDisconnect(client) {
-	LeaveCrab(client);
+	LeaveCrab(client, true);
 }
 
 public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(IsValidClient(client)) {
-		LeaveCrab(client);
+		LeaveCrab(client, true);
 	}
 }
 
@@ -131,10 +131,12 @@ public JoinCrab(client) {
 	}
 }
 
-public LeaveCrab(client) {
-	if(g_Spycrabbing[client] && g_SpycrabEventStatus < 3) {
-		ResetVars(client);
-		g_PlayersInSpycrab--;
+public LeaveCrab(client, weak) {
+	if(g_Spycrabbing[client]) {
+		if(g_SpycrabEventStatus < 3 || weak) {
+			ResetVars(client);
+			g_PlayersInSpycrab--;
+		}
 	}
 }
 
