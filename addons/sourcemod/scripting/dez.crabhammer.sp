@@ -5,7 +5,8 @@
 #include <sdktools>
 
 ConVar g_Enabled;
-new g_PlayersInSpycrab = 0;
+
+new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
@@ -47,23 +48,6 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
 	}
 }
 
-public OnClientDisconnect(client) {
-	LeaveCrab(client);
-}
-
-public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) { //Incase they suicide during a spycrab. Lolmadbru
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(IsValidClient(client)) {
-		LeaveCrab(client);
-	}
-}
-
-public OnEntityCreated(entity, const String:classname[]) {
-    if(StrEqual(classname, "instanced_scripted_scene", false)) {
-		SDKHook(entity, SDKHook_Spawn, OnSceneSpawned);
-	}
-}
-
 public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
@@ -77,15 +61,25 @@ public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	return Plugin_Continue;
 }
 
+public OnEntityCreated(entity, const String:classname[]) {
+    if(StrEqual(classname, "instanced_scripted_scene", false)) {
+		SDKHook(entity, SDKHook_Spawn, OnSceneSpawned);
+	}
+}
+
 public OnSceneSpawned(entity) {
 	new client = GetEntPropEnt(entity, Prop_Data, "m_hOwner"), String:scenefile[128];
 	if(g_Spycrabbing[client]) {
 		GetEntPropString(entity, Prop_Data, "m_iszSceneFile", scenefile, sizeof(scenefile));
 		if(StrEqual(scenefile, "scenes/player/spy/low/taunt05.vcd")) {
-			HandleCrab(client);
+			g_Spycrabs[client]++;
 		}
 	}
-} 
+}
+
+/*
+	Tracking who is and isn't in a crab
+*/
 
 public OnStartTouchCrab(entity, client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
@@ -98,6 +92,18 @@ public OnStopTouchCrab(entity, client) {
 		LeaveCrab(client);
 	}
 }
+
+public OnClientDisconnect(client) {
+	LeaveCrab(client);
+}
+
+public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) {
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if(IsValidClient(client)) {
+		LeaveCrab(client);
+	}
+}
+
 
 public JoinCrab(client) {
 	if(!g_Spycrabbing[client]) {
@@ -119,33 +125,12 @@ public LeaveCrab(client) {
 	}
 }
 
-public HandleCrab(client) {
-	if(g_SpycrabEventStatus == 2) {
-		CreateTimer(3.0, KillCrab, client);
-	} else if(g_SpycrabEventStatus == 3) {
-		g_Spycrabs[client]++;
-		if(g_Spycrabs[client] == 3) {
-			CreateTimer(3.0, KillCrab, client);
-		}
-	}
-}
-
-public Action:KillCrab(Handle:timer, client) {
-	ForcePlayerSuicide(client);
-}
-
 public ModifyCrabEvent() {
 	if(g_SpycrabEventStatus == 0) {
 		if(g_PlayersInSpycrab > 1) {
 			g_SpycrabEventStatus = 1;
 			PrintHudCentreText("A spy crab tournament challenge has been issued", 5.0);
 			CreateTimer(7.0, CountdownMessage, 0);
-		}
-	} else if(g_SpycrabEventStatus == 2) {
-		if(g_PlayersInSpycrab < 3) {
-			g_SpycrabEventStatus = 3;
-			PrintToChatAll("ENDING SPYCRAB");
-			 //End crab and do showdown
 		}
 	}
 }
@@ -196,15 +181,106 @@ public Action:StartCrab(Handle:timer) {
 				}
 			}
 		}
+		CreateTimer(3.0, HandleCrabs);
 		return Plugin_Continue;
 	} else {
 		return Plugin_Stop;
 	}
 }
 
+public Action:HandleCrabs(Handle:timer) {
+	new counter = 0;
+	for(new client=0; client<MaxClients; client++) {
+		if(g_SpycrabEventStatus == 2) {
+			if(g_Spycrabs[client] > 0) {
+				counter++;
+			}
+		} else if(g_SpycrabEventStatus == 3) {
+			if(g_Spycrabs[client] > 2) {
+				counter++;
+			}
+		}
+	}
+	new remainingPlayers = g_PlayersInSpycrab - counter;
+	if(g_SpycrabEventStatus == 2) {
+		if(remainingPlayers == 2) {
+			decl String:strName[50];
+			new offset = 0;
+			while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
+				GetEntPropString(i, Prop_Data, "m_iName", strName, sizeof(strName));
+				if(strcmp(strName, "wincrabHammer1") == 0) {
+					new Float:pos[3];
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+					for(new client=offset; client<MaxClients; client++) {
+						if(g_Spycrabs[client] == 0) {
+							if(IsValidClient(client)) {
+								TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
+								offset = client+1;
+							}
+						}
+					}
+				} else if(strcmp(strName, "wincrabHammer2") == 0) {
+					new Float:pos[3];
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+					for(new client=offset; client<MaxClients; client++) {
+						if(g_Spycrabs[client] == 0) {
+							if(IsValidClient(client)) {
+								TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
+								offset = client+1;
+							}
+						}
+					}
+				}
+			}
+			g_SpycrabEventStatus = 3;
+		} else if(remainingPlayers == 1) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+					SpycrabWinner(client);
+				}
+			}
+			g_SpycrabEventStatus = 0;
+		} else if(remainingPlayers < 1) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabbing[client]) {
+					PrintCenterText(client, "Don't buy a lottery ticket..");
+				}
+			}
+			g_SpycrabEventStatus = 0;
+		}
+		for(new client=0; client<MaxClients; client++) {
+			if(g_Spycrabs[client] > 0) {
+				ForcePlayerSuicide(client);
+			}
+		}
+	} else if(g_SpycrabEventStatus == 3) {
+		if(remainingPlayers == 1) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabs[client] == 3) {
+					ForcePlayerSuicide(client);
+				} else if(g_Spycrabbing[client] && g_Spycrabs[client] < 3) {
+					SpycrabWinner(client);
+				}
+			}
+		} else if(remainingPlayers == 0) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabs[client] == 3) {
+					PrintCenterText(client, "Don't buy a lottery ticket..");
+					ForcePlayerSuicide(client);
+				}
+			}
+		}
+	}
+	
+}
+
+public SpycrabWinner(client) {
+
+}
+
 public DenyCrab(client) {
 	ForcePlayerSuicide(client);
-	PrintCenterText(client, "TESTSA tournament is already under way");
+	PrintCenterText(client, "A tournament is already under way");
 }
 
 public ResetVars(client) {
