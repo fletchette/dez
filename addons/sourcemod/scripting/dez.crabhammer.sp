@@ -251,10 +251,10 @@ public Action:HandleCrabs(Handle:timer) {
 			} else if(remainingPlayers < 1) {
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabbing[client]) {
-						PrintCenterText(client, "Don't buy a lottery ticket..");
+						PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
 					}
 				}
-				g_SpycrabEventStatus = 0;
+				EndCrab();
 			}
 		} else if(g_SpycrabEventStatus == 3) { //Showdown mode
 			if(remainingPlayers == 1) {
@@ -268,22 +268,44 @@ public Action:HandleCrabs(Handle:timer) {
 			} else if(remainingPlayers == 0) {
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabs[client] == 3) {
-						PrintCenterText(client, "Don't buy a lottery ticket..");
+						PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
 						ForcePlayerSuicide(client);
 					}
 				}
+			}
+			if(remainingPlayers < 2) {
+				EndCrab();
 			}
 		}
 	}
 }
 
 public SpycrabWinner(client) {
+	decl String:strName[50];
+	new entity = -1;
+	while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "kingcrab") == 0) {
+			new Float:pos[3];
+			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+			if(IsValidClient(client)) {
+				TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
+			}
+		}
+	}
 	PrintToChatAll("%d won", client);
 }
 
 public DenyCrab(client) {
 	ForcePlayerSuicide(client);
 	PrintCenterText(client, "A tournament is already under way");
+}
+
+public EndCrab() {
+	g_SpycrabEventStatus = 0;
+	for(new client=0; client<MaxClients; client++) {
+		ResetVars(client);
+	}
 }
 
 public ResetVars(client) {
@@ -293,6 +315,13 @@ public ResetVars(client) {
 }
 
 //Stocks
+stock PrintHudCentreTextClient(client, String:text[], Float:time) {
+	SetHudTextParams(-1.0, 0.3, time, 0, 255, 0, 1);
+	if(IsValidClient(client) && !IsFakeClient(client)) {
+		ShowSyncHudText(client, gHud, "%s", text);
+	}
+}
+
 stock PrintHudCentreText(String:text[], Float:time) {
 	SetHudTextParams(-1.0, 0.3, time, 0, 255, 0, 1);
 	for(new client=0; client<MaxClients; client++) {
