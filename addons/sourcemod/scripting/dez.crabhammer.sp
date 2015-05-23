@@ -20,10 +20,9 @@ public OnPluginStart() {
 	HookEvent("player_death", Event_PlayerDeath);
 	AddCommandListener(Event_Taunt, "taunt");
 	AddCommandListener(Event_Taunt, "+taunt");
-
-	AddCommandListener(DoSuicide, "explode");
-	AddCommandListener(DoSuicide, "kill");
-	AddCommandListener(DoSuicide, "jointeam");
+	AddCommandListener(Event_Suicide, "explode");
+	AddCommandListener(Event_Suicide, "kill");
+	AddCommandListener(Event_Suicide, "jointeam");
 
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -64,7 +63,7 @@ public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	return Plugin_Continue;
 }
 
-public Action:DoSuicide(client, const String:sCommand[], args)
+public Action:Event_Suicide(client, const String:strCommand[], iArgs)
 {
     if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
@@ -124,6 +123,8 @@ public JoinCrab(client) {
 			g_Spycrabbing[client] = true;
 			g_PlayersInSpycrab++;
 			ModifyCrabEvent();
+			new item = GivePlayerItem(client, "tf_weapon_pda_spy");
+			EquipPlayerWeapon(client, item);
 		} else {
 			DenyCrab(client);
 		}
@@ -134,7 +135,6 @@ public LeaveCrab(client) {
 	if(g_Spycrabbing[client] && g_SpycrabEventStatus < 3) {
 		ResetVars(client);
 		g_PlayersInSpycrab--;
-		ModifyCrabEvent();
 	}
 }
 
