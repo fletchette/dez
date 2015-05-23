@@ -118,7 +118,7 @@ public JoinCrab(client) {
 }
 
 public LeaveCrab(client) {
-	if(g_Spycrabbing[client]) {
+	if(g_Spycrabbing[client] && g_SpycrabEventStatus < 3) {
 		ResetVars(client);
 		g_PlayersInSpycrab--;
 		ModifyCrabEvent();
@@ -206,6 +206,11 @@ public Action:HandleCrabs(Handle:timer) {
 	new remainingPlayers = g_PlayersInSpycrab - counter;
 	if(remainingPlayers < 3) {
 		if(g_SpycrabEventStatus == 2) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabs[client] > 0) {
+					ForcePlayerSuicide(client);
+				}
+			}
 			if(remainingPlayers == 2) {
 				new winnerOne = -1, winnerTwo = -1;
 				for(new client=0; client<MaxClients; client++) {
@@ -217,6 +222,7 @@ public Action:HandleCrabs(Handle:timer) {
 						}
 					}
 				}
+				g_SpycrabEventStatus = 3;
 				decl String:strName[50];
 				new entity = -1;
 				while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
@@ -235,7 +241,6 @@ public Action:HandleCrabs(Handle:timer) {
 						}
 					}
 				}
-				g_SpycrabEventStatus = 3;
 			} else if(remainingPlayers == 1) {
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
@@ -250,11 +255,6 @@ public Action:HandleCrabs(Handle:timer) {
 					}
 				}
 				g_SpycrabEventStatus = 0;
-			}
-			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabs[client] > 0) {
-					ForcePlayerSuicide(client);
-				}
 			}
 		} else if(g_SpycrabEventStatus == 3) { //Showdown mode
 			if(remainingPlayers == 1) {
