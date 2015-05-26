@@ -59,6 +59,9 @@ public Action:Command_Test(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		
+		PrintToChatAll("%f %f %f", min[0], min[1], min[2]);
+		PrintToChatAll("%f %f %f", max[0], max[1], max[2]);
+		
 		pos[2] = min[2];
 		pos[1] = min[1] + ((max[1] - min[1]) / 2);
 		pos[0] = min[0] + ((max[0] - min[0]) / 4);
