@@ -45,7 +45,7 @@ public Action:Command_Test(client, args) {
 	decl String:strName[50];
 	new entity = -1, pointer = -1;
 
-	while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
 		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
 		if(strcmp(strName, "crabShowdown") == 0) {
 			pointer = entity;
