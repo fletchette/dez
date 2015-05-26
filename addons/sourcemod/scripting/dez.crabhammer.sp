@@ -63,6 +63,16 @@ public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	return Plugin_Continue;
 }
 
+public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon, &subtype, &cmdnum, &tickcount, &seed, mouse[2]) {
+	//IN_JUMP
+	if(IsValidClient(client) && g_Spycrabbing[client]) {
+		if(buttons & IN_JUMP) {
+			return Plugin_Handled;
+		}
+	}
+	return Plugin_Continue;
+}
+
 public Action:Event_Suicide(client, const String:strCommand[], iArgs)
 {
     if(IsValidClient(client)) {
@@ -154,7 +164,7 @@ public Action:CountdownMessage(Handle:timer, any:counter) {
 	CreateTimer(5.0, StartCountdownFive);
 	/*
 	if(counter == 0) {
-		PrintHudCentreText("Say !teleport to move to the arena and accept the crab king's challenge", 8.0);
+		PrintHudCentreText("Take the teleport to the arena and accept the crab king's challenge", 8.0);
 		CreateTimer(10.0, CountdownMessage, 1);
 	} else if(counter == 1) {
 		PrintHudCentreText("60 seconds remaining", 4.0);
@@ -175,15 +185,7 @@ public Action:CountdownFive(Handle:timer) {
 		counter = 5;
 		g_SpycrabEventStatus = 2;
 		CreateTimer(7.0, StartCrab, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-		
-		for(new client=0; client<MaxClients; client++) {
-			if(IsValidClient(client)) {
-				if(g_Spycrabbing[client]) {
-					SetEntityMoveType(client, MOVETYPE_NONE);
-				}
-			}
-		}
-		
+		CreateTimer(1.0, FreezeCrabbers);
 		return Plugin_Stop;
 	}
 	
@@ -194,6 +196,16 @@ public Action:CountdownFive(Handle:timer) {
 	
 	counter--;
 	return Plugin_Continue;
+}
+
+public Action:FreezeCrabbers(Handle:timer) {
+	for(new client=0; client<MaxClients; client++) {
+		if(IsValidClient(client)) {
+			if(g_Spycrabbing[client]) {
+				SetEntityMoveType(client, MOVETYPE_NONE);
+			}
+		}
+	}
 }
 
 public Action:StartCrab(Handle:timer) {
@@ -236,16 +248,23 @@ public Action:HandleCrabs(Handle:timer) {
 			}
 			if(remainingPlayers == 2) {
 				new winnerOne = -1, winnerTwo = -1;
+				decl String:nameOne[64], String:nameTwo[64], String:buffer[162];
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
 						if(winnerOne == -1) {
 							winnerOne = client;
+							GetClientName(client, nameOne, 64);
 						} else {
 							winnerTwo = client;
+							GetClientName(client, nameTwo, 64);
 						}
 					}
 				}
 				g_SpycrabEventStatus = 3;
+				
+				Format(buffer, sizeof(buffer), "%s vs %s - first to 3 Spy-Crabs Loses", nameOne, nameTwo);
+				PrintHudCentreText(buffer, 4.0);
+				
 				decl String:strName[50];
 				new entity = -1;
 				while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
@@ -316,7 +335,11 @@ public SpycrabWinner(client) {
 			}
 		}
 	}
-	PrintToChatAll("%d won", client);
+	
+	decl String:name[64], String:buffer[90];
+	GetClientName(client, name, 64);
+	Format(buffer, sizeof(buffer), "%s is the new spycrab king!", name);
+	PrintHudCentreText(buffer, 4.0);
 }
 
 public DenyCrab(client) {
@@ -340,14 +363,14 @@ public ResetVars(client) {
 
 //Stocks
 stock PrintHudCentreTextClient(client, String:text[], Float:time) {
-	SetHudTextParams(-1.0, 0.3, time, 0, 255, 0, 1);
+	SetHudTextParams(-1.0, 0.3, time, 155, 48, 255, 1);
 	if(IsValidClient(client) && !IsFakeClient(client)) {
 		ShowSyncHudText(client, gHud, "%s", text);
 	}
 }
 
 stock PrintHudCentreText(String:text[], Float:time) {
-	SetHudTextParams(-1.0, 0.3, time, 0, 255, 0, 1);
+	SetHudTextParams(-1.0, 0.3, time, 155, 48, 255, 1);
 	for(new client=0; client<MaxClients; client++) {
 		if(IsValidClient(client) && !IsFakeClient(client)) {
 			ShowSyncHudText(client, gHud, "%s", text);
