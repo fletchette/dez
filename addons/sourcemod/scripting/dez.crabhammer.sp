@@ -53,23 +53,25 @@ public Action:Command_Test(client, args) {
 		}
 	}
 	
-	decl Float:min[3], Float:max[3], Float:pos[3];
+	decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
 	if(pointer != -1) {
 		PrintToChatAll("Found ent");
+		
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		
 		PrintToChatAll("%f %f %f", min[0], min[1], min[2]);
 		PrintToChatAll("%f %f %f", max[0], max[1], max[2]);
 		
-		pos[2] = min[2];
-		pos[1] = min[1] + ((max[1] - min[1]) / 2);
-		pos[0] = min[0] + ((max[0] - min[0]) / 4);
+		pos[2] = origin[2] + min[2];
+		pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
+		pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
 		
 		
 		TeleportEntity(0, pos, NULL_VECTOR, NULL_VECTOR);
 		
-		pos[0] = pos[0] * 3;
+		pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
 		
 		TeleportEntity(1, pos, NULL_VECTOR, NULL_VECTOR);
 	}
