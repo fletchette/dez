@@ -306,11 +306,11 @@ public Action:HandleCrabs(Handle:timer) {
 					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
 					
 					
-					TeleportEntity(0, pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
 					
 					pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
 					
-					TeleportEntity(1, pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
 				}
 				
 			} else if(remainingPlayers == 1) {
