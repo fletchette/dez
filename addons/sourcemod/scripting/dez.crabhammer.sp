@@ -56,13 +56,13 @@ public Action:Command_Test(client, args) {
 	decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
 	if(pointer != -1) {
 		PrintToChatAll("Found ent");
-		
-		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 		
-		PrintToChatAll("%f %f %f", min[0], min[1], min[2]);
-		PrintToChatAll("%f %f %f", max[0], max[1], max[2]);
+		origin[0] -= (min[0] + max[0]) * 0.5;
+		origin[1] -= (min[1] + max[1]) * 0.5;
+		origin[2] -= (min[2] + max[2]) * 0.5;
 		
 		pos[2] = origin[2] + min[2];
 		pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
