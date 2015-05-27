@@ -29,56 +29,12 @@ public OnPluginStart() {
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
 	
-	//Commands
-	RegAdminCmd("sm_dez_test", Command_Test, ADMFLAG_RCON, "Test.");
-	
 	//Hud
 	gHud = CreateHudSynchronizer();
 	if(gHud == INVALID_HANDLE) {
 		SetFailState("HUD synchronisation is not supported by this mod");
 	}
 }
-
-public Action:Command_Test(client, args) {
-	PrintToChatAll("Testing");
-
-	decl String:strName[50];
-	new entity = -1, pointer = -1;
-
-	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
-		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
-		if(strcmp(strName, "crabShowdown") == 0) {
-			pointer = entity;
-			break;
-		}
-	}
-	
-	decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
-	if(pointer != -1) {
-		PrintToChatAll("Found ent");
-		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
-		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
-		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		
-		origin[0] -= (min[0] + max[0]) * 0.5;
-		origin[1] -= (min[1] + max[1]) * 0.5;
-		origin[2] -= (min[2] + max[2]) * 0.5;
-		
-		pos[2] = origin[2] + min[2];
-		pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
-		pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
-		
-		
-		TeleportEntity(0, pos, NULL_VECTOR, NULL_VECTOR);
-		
-		pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
-		
-		TeleportEntity(1, pos, NULL_VECTOR, NULL_VECTOR);
-	}
-
-	return Plugin_Handled;
-}
-
 
 public OnMapStart() {
 	g_SpycrabEventStatus = 0;
@@ -322,10 +278,11 @@ public Action:HandleCrabs(Handle:timer) {
 				Format(buffer, sizeof(buffer), "%s vs %s - first to three spycrabs loses", nameOne, nameTwo);
 				PrintHudCentreText(buffer, 4.0);
 				
+				
 				decl String:strName[50];
 				new entity = -1, pointer = -1;
 
-				while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
+				while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
 					GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
 					if(strcmp(strName, "crabShowdown") == 0) {
 						pointer = entity;
@@ -333,22 +290,29 @@ public Action:HandleCrabs(Handle:timer) {
 					}
 				}
 				
-				decl Float:min[3], Float:max[3], Float:pos[3];
+				decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
 				if(pointer != -1) {
+					PrintToChatAll("Found ent");
 					GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 					GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 					
-					pos[2] = min[2];
-					pos[1] = min[1] + ((max[1] - min[1]) / 2);
-					pos[0] = min[0] + ((max[0] - min[0]) / 4);
+					origin[0] += (min[0] + max[0]) * 0.5;
+					origin[1] += (min[1] + max[1]) * 0.5;
+					origin[2] += (min[2] + max[2]) * 0.5;
+					
+					pos[2] = origin[2] + min[2];
+					pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
+					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
 					
 					
-					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(0, pos, NULL_VECTOR, NULL_VECTOR);
 					
-					pos[0] = pos[0] * 3;
+					pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
 					
-					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(1, pos, NULL_VECTOR, NULL_VECTOR);
 				}
+				
 			} else if(remainingPlayers == 1) {
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
