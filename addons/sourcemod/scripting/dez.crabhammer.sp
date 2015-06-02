@@ -26,6 +26,8 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
 
+	RegConsoleCmd("sm_test", Command_Test);
+	
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
 	
@@ -34,6 +36,13 @@ public OnPluginStart() {
 	if(gHud == INVALID_HANDLE) {
 		SetFailState("HUD synchronisation is not supported by this mod");
 	}
+}
+
+public Action:Command_Test(client, args) {
+	if(IsValidClient(client)) {
+		CrabHat(client);
+	}
+	return Plugin_Handled;
 }
 
 public OnMapStart() {
