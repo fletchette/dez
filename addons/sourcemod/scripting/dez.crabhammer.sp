@@ -11,7 +11,7 @@ new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
-
+new g_Trail[MAXPLAYERS+1] = {0, ...};
 new g_Showdown[2] = {-1, -1};
 
 new Handle:gHud;
@@ -38,7 +38,10 @@ public OnPluginStart() {
 
 public OnMapStart() {
 	g_SpycrabEventStatus = 0;
-	g_Showdown = {-1, -1}	;
+	g_Showdown = {-1, -1};
+	PrecacheModel("materials/models/player/crabbingking.vmt");
+	AddFileToDownloadsTable("materials/models/player/crabbingking.vmt");
+	AddFileToDownloadsTable("materials/models/player/crabbingking.vtf");
 }
 
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
@@ -129,20 +132,11 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
 }
 
 public JoinCrab(client) {
-
-	/*
-		Debugging
-	*/
-	
-	//GetEntityAbsOrigin
-
 	if(!g_Spycrabbing[client]) {
 		if(g_SpycrabEventStatus < 2 || client == g_Showdown[0] || client == g_Showdown[1]) {
 			g_Spycrabbing[client] = true;
 			g_PlayersInSpycrab++;
 			ModifyCrabEvent();
-			new item = GivePlayerItem(client, "tf_weapon_pda_spy");
-			EquipPlayerWeapon(client, item);
 		} else {
 			DenyCrab(client);
 		}
@@ -297,14 +291,13 @@ public Action:HandleCrabs(Handle:timer) {
 					GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 					
-					origin[0] += (min[0] + max[0]) * 0.5;
-					origin[1] += (min[1] + max[1]) * 0.5;
-					origin[2] += (min[2] + max[2]) * 0.5;
+					//origin[0] += (min[0] + max[0]) * 0.5;
+					//origin[1] += (min[1] + max[1]) * 0.5;
+					//origin[2] += (min[2] + max[2]) * 0.5;
 					
-					pos[2] = origin[2] + min[2];
+					pos[2] = origin[2];
 					pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
 					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
-					
 					
 					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
 					
@@ -365,11 +358,35 @@ public SpycrabWinner(client) {
 			}
 		}
 	}
-	
+	CrabHat(client);
 	decl String:name[64], String:buffer[90];
 	GetClientName(client, name, 64);
 	Format(buffer, sizeof(buffer), "%s is the new spycrab king!", name);
 	PrintHudCentreText(buffer, 4.0);
+}
+
+public CrabHat(client) {
+	new Float:pos[3]; 
+	GetClientAbsOrigin(client, pos); 
+	pos[2] += 10.0;
+
+	g_Trail[client] = CreateEntityByName("env_spritetrail", -1);
+	
+	decl String:temp[64];
+	Format(temp, sizeof(temp), "CrabHat_%d", GetClientUserId(client));
+	
+	
+	if(g_Trail[client] > 0) { 
+		DispatchKeyValueVector(g_Trail[client], "origin", pos);
+		DispatchKeyValue(client, "targetname", temp);
+		DispatchKeyValue(g_Trail[client], "parentname", temp); 
+		DispatchKeyValue(g_Trail[client], "spritename", "materials/models/player/crabbingking.vmt");
+		DispatchSpawn(g_Trail[client]);
+		TeleportEntity(g_Trail[client], pos, NULL_VECTOR, NULL_VECTOR);
+		SetVariantString(temp);
+		AcceptEntityInput(g_Trail[client], "SetParent");
+		//SetEntPropFloat(g_Trail[client], Prop_Send, "m_flTextureRes", 0.05);
+	}
 }
 
 public DenyCrab(client) {
@@ -380,13 +397,13 @@ public DenyCrab(client) {
 public EndCrab() {
 	g_SpycrabEventStatus = 0;
 	for(new client=0; client<MaxClients; client++) {
-		ResetVars(client);
+		ResetVars(client);	
 	}
 }
 
 public ResetVars(client) {
 	g_Spycrabbing[client] = false;
-	g_AllowTaunt[client] = false;
+	g_AllowTaunt[client] = false;	
 	g_Spycrabs[client] = 0;
 	SetEntityMoveType(client, MOVETYPE_WALK);
 }

@@ -60,12 +60,12 @@ public OnStartTouchCrabbing(entity, client) {
 			}
 		}
 		for(new i=0; i<6; i++) { //Loop through deir weaponz
-			if(i != 3) { //DON'T REMOVE THIER DISGUIES KIT OK?
-				if(GetPlayerWeaponSlot(client, i) != -1) { //If dey have weapon in dis slot
-					TF2_RemoveWeaponSlot(client, i); //Tell it to go fuck itself
-				}
+			if(GetPlayerWeaponSlot(client, i) != -1) { //If dey have weapon in dis slot
+				TF2_RemoveWeaponSlot(client, i); //Tell it to go fuck itself
 			}
 		}
+		new item = GivePlayerItem(client, "tf_weapon_pda_spy");
+		EquipPlayerWeapon(client, item);
 		ClientCommand(client, "slot4"); //Force them to equip kit
 	}
 }
