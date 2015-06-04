@@ -40,6 +40,7 @@ public OnPluginStart() {
 
 public Action:Command_Test(client, args) {
 	if(IsValidClient(client)) {
+		PrintToChatAll("HATTTIEES");
 		CrabHat(client);
 	}
 	return Plugin_Handled;
@@ -386,6 +387,7 @@ public CrabHat(client) {
 	
 	
 	if(g_Trail[client] > 0) { 
+		PrintToChatAll("Debug #2");
 		DispatchKeyValueVector(g_Trail[client], "origin", pos);
 		DispatchKeyValue(client, "targetname", temp);
 		DispatchKeyValue(g_Trail[client], "parentname", temp); 
@@ -394,7 +396,7 @@ public CrabHat(client) {
 		TeleportEntity(g_Trail[client], pos, NULL_VECTOR, NULL_VECTOR);
 		SetVariantString(temp);
 		AcceptEntityInput(g_Trail[client], "SetParent");
-		//SetEntPropFloat(g_Trail[client], Prop_Send, "m_flTextureRes", 0.05);
+		SetEntPropFloat(g_Trail[client], Prop_Send, "m_flTextureRes", 0.05);
 	}
 }
 
