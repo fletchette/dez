@@ -6,15 +6,16 @@
 
 ConVar g_Enabled;
 
-#define CRABKING_VMT "materials/sprites/player/crabbingking.vmt" 
-#define CRABKING_VTF "materials/sprites/player/crabbingking.vtf" 
+#define CRABKING_VMT "sprites/player/crabbingking.vmt" 
+#define CRABKING_VTF "sprites/player/crabbingking.vtf" 
 
 new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
-new g_Showdown[2] = {-1, -1};
+
+new g_Showdown[2] = {-1, -1}; //This struct stores the two players in the showdown
 
 new g_Sprites[MAXPLAYERS+1] = {-1, ...};
 
@@ -134,7 +135,7 @@ public OnStopTouchCrab(entity, client) {
 }
 
 public OnClientDisconnect(client) {
-	RemoveSprite(g_Sprites[client]);
+	RemoveSprite(g_Sprites[client]); //Remove their hat on disconnect
 	g_Sprites[client] = -1;
 	LeaveCrab(client, true);
 }
