@@ -6,13 +6,17 @@
 
 ConVar g_Enabled;
 
+#define CRABKING_VMT "materials/sprites/sg_detective_icon.vmt" 
+#define CRABKING_VTF "materials/sprites/sg_detective_icon.vtf" 
+
 new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
-new g_Trail[MAXPLAYERS+1] = {0, ...};
 new g_Showdown[2] = {-1, -1};
+
+new g_Sprites[MAXPLAYERS+1] = {-1, ...};
 
 new Handle:gHud;
 
@@ -48,9 +52,9 @@ public Action:Command_Test(client, args) {
 public OnMapStart() {
 	g_SpycrabEventStatus = 0;
 	g_Showdown = {-1, -1};
-	PrecacheModel("materials/models/player/crabbingking.vmt");
-	AddFileToDownloadsTable("materials/models/player/crabbingking.vmt");
-	AddFileToDownloadsTable("materials/models/player/crabbingking.vtf");
+	AddFileToDownloadsTable(CRABKING_VMT);
+	AddFileToDownloadsTable(CRABKING_VTF);
+	PrecacheModel(CRABKING_VMT);
 }
 
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
@@ -375,25 +379,9 @@ public SpycrabWinner(client) {
 }
 
 public CrabHat(client) {
-	new Float:pos[3]; 
-	GetClientAbsOrigin(client, pos); 
-	pos[2] += 10.0;
-	
-	g_Trail[client] = CreateEntityByName("env_spritetrail", -1);
-	
-	if(g_Trail[client] > 0) { 
-		//decl String:temp[64];
-		//Format(temp, sizeof(temp), "CrabHat_%d", GetClientUserId(client));
-		
-		//DispatchKeyValueVector(g_Trail[client], "origin", pos);
-		DispatchKeyValue(g_Trail[client], "spritename", "materials/sprites/player/crabbingking.vmt");
-		
-		DispatchSpawn(g_Trail[client]);
-		TeleportEntity(g_Trail[client], pos, NULL_VECTOR, NULL_VECTOR);
-		
-		//AcceptEntityInput(g_Trail[client], "SetParentAttachmentMaintainOffset", client, g_Trail[client]); 
-		SetEntPropFloat(g_Trail[client], Prop_Send, "m_flTextureRes", 0.05);
-	}
+	RemoveSprite(g_Sprites[client]);
+	g_Sprites[client] = CreateSprite();
+	AttachSprite(client, g_Sprites[client]);
 }
 
 public DenyCrab(client) {
@@ -439,4 +427,43 @@ stock bool:IsValidClient(iClient, bool:bReplay = true) {
 	if(bReplay && (IsClientSourceTV(iClient) || IsClientReplay(iClient)))
 		return false;
 	return true;
+}
+
+/*
+	For the sprites and shit and shit
+*/
+
+public CreateSprite() {
+	new sprite = CreateEntityByName("env_sprite_oriented");
+	if(sprite != -1) {
+		DispatchKeyValue(sprite, "classname", "env_sprite_oriented");
+		DispatchKeyValue(sprite, "spawnflags", "1");
+		DispatchKeyValue(sprite, "scale", "0.3");
+		DispatchKeyValue(sprite, "rendermode", "1");
+		DispatchKeyValue(sprite, "rendercolor", "255 255 255");
+		DispatchKeyValue(sprite, "model", CRABKING_VMT);
+		
+		if(DispatchSpawn(sprite)) {
+			return sprite;
+		}		
+	}
+	return -1;
+}
+
+public AttachSprite(client, entity) {
+	new Float:pos[3];
+	if(IsValidEntity(entity)) {
+		GetClientAbsOrigin(client, pos); 
+		pos[2] += 90.0;
+		TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(entity, "SetParent", client);
+	}
+}
+
+public RemoveSprite(entity) {
+	if(IsValidEntity(entity)) {
+		AcceptEntityInput(entity, "Kill");
+	}
 }
