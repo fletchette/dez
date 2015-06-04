@@ -6,8 +6,8 @@
 
 ConVar g_Enabled;
 
-#define CRABKING_VMT "materials/sprites/sg_detective_icon.vmt" 
-#define CRABKING_VTF "materials/sprites/sg_detective_icon.vtf" 
+#define CRABKING_VMT "mmaterials/sprites/player/crabbingking.vmt" 
+#define CRABKING_VTF "materials/sprites/player/crabbingking.vtf" 
 
 new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
@@ -134,12 +134,16 @@ public OnStopTouchCrab(entity, client) {
 }
 
 public OnClientDisconnect(client) {
+	RemoveSprite(g_Sprites[client]);
+	g_Sprites[client] = -1;
 	LeaveCrab(client, true);
 }
 
 public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(IsValidClient(client)) {
+		RemoveSprite(g_Sprites[client]);
+		g_Sprites[client] = -1;
 		LeaveCrab(client, true);
 	}
 }
