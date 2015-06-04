@@ -379,24 +379,19 @@ public CrabHat(client) {
 	GetClientAbsOrigin(client, pos); 
 	pos[2] += 10.0;
 	
-	PrintToChatAll("%f %f %f", pos[0], pos[1], pos[2]);
-	
 	g_Trail[client] = CreateEntityByName("env_spritetrail", -1);
 	
-	decl String:temp[64];
-	Format(temp, sizeof(temp), "CrabHat_%d", GetClientUserId(client));
-	
-	
 	if(g_Trail[client] > 0) { 
-		PrintToChatAll("Debug #2");
+		//decl String:temp[64];
+		//Format(temp, sizeof(temp), "CrabHat_%d", GetClientUserId(client));
 		
-		DispatchKeyValueVector(g_Trail[client], "origin", pos);
+		//DispatchKeyValueVector(g_Trail[client], "origin", pos);
 		DispatchKeyValue(g_Trail[client], "spritename", "materials/sprites/player/crabbingking.vmt");
 		
 		DispatchSpawn(g_Trail[client]);
 		TeleportEntity(g_Trail[client], pos, NULL_VECTOR, NULL_VECTOR);
 		
-		AcceptEntityInput(g_Trail[client], "SetParentAttachmentMaintainOffset", client, g_Trail[client]); 
+		//AcceptEntityInput(g_Trail[client], "SetParentAttachmentMaintainOffset", client, g_Trail[client]); 
 		SetEntPropFloat(g_Trail[client], Prop_Send, "m_flTextureRes", 0.05);
 	}
 }
