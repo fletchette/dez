@@ -6,7 +6,7 @@
 
 ConVar g_Enabled;
 
-#define CRABKING_VMT "mmaterials/sprites/player/crabbingking.vmt" 
+#define CRABKING_VMT "materials/sprites/player/crabbingking.vmt" 
 #define CRABKING_VTF "materials/sprites/player/crabbingking.vtf" 
 
 new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
