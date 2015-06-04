@@ -39,6 +39,7 @@ public OnPluginStart() {
 }
 
 public Action:Command_Test(client, args) {
+	PrintToChatAll("%d", client);
 	if(IsValidClient(client)) {
 		PrintToChatAll("HATTTIEES");
 		CrabHat(client);
@@ -391,7 +392,7 @@ public CrabHat(client) {
 		DispatchKeyValueVector(g_Trail[client], "origin", pos);
 		DispatchKeyValue(client, "targetname", temp);
 		DispatchKeyValue(g_Trail[client], "parentname", temp); 
-		DispatchKeyValue(g_Trail[client], "spritename", "materials/models/player/crabbingking.vmt");
+		DispatchKeyValue(g_Trail[client], "spritename", "materials/sprites/player/crabbingking.vmt");
 		DispatchSpawn(g_Trail[client]);
 		TeleportEntity(g_Trail[client], pos, NULL_VECTOR, NULL_VECTOR);
 		SetVariantString(temp);
