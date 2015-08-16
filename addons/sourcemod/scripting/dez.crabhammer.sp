@@ -31,8 +31,8 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
 
-	RegConsoleCmd("sm_fletch", Command_FletchOne);
-	RegConsoleCmd("sm_fletchy", Command_FletchTwo);
+	RegConsoleCmd("sm_fletchmin", Command_FletchOne);
+	RegConsoleCmd("sm_fletchmax", Command_FletchTwo);
 	RegConsoleCmd("sm_hack", Command_Hack);
 	
 	//Cvars
@@ -61,24 +61,41 @@ public Action:Command_FletchOne(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		PrintToChatAll("%d %d", min[0], max[0]);
-		PrintToChatAll("%d %d", min[2], max[2]);
-		origin[0] += (min[0] + max[0]) * 0.5;
-		origin[2] += (min[2] + max[2]) * 0.5;
-		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+		TeleportEntity(client, min, NULL_VECTOR, NULL_VECTOR);
 	}
 	return Plugin_Handled;
 }
 
 public Action:Command_FletchTwo(client, args) {
+	new entity = -1, pointer = -1;
+	decl String:strName[50];
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "crabShowdown") == 0) {
+			pointer = entity;
+			break;
+		}
+	}
+	
+	decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
+	if(pointer != -1) {
+		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		TeleportEntity(client, max, NULL_VECTOR, NULL_VECTOR);
+	}
 	return Plugin_Handled;
 }
 
 public Action:Command_Hack(client, args) {
-	char arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	PrintToChatAll("%s", arg1);
-	ServerCommand("%s", arg1);
+	if(args < 1) {
+		return Plugin_Handled;	
+	}
+	
+	decl String:text[192];
+	GetCmdArgString(text, sizeof(text));
+
+	ServerCommand("%s", text);
 	return Plugin_Handled;
 }
 
