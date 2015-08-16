@@ -55,12 +55,13 @@ public Action:Command_FletchOne(client, args) {
 		}
 	}
 	
-	decl Float:min[3], Float:max[3], Float:origin[3];
+	decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
 	if(pointer != -1) {
-		PrintToChatAll("Found ent");
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		origin[0] += (min[0] + max[0]) * 0.5;
+		origin[2] += (min[2] + max[2]) * 0.5;
 		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
 	}
 	return Plugin_Handled;
