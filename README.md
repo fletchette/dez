@@ -1,12 +1,5 @@
 # dez
 Sourcemod Plugins for Dez
 
-
-To install clone the repo and then copy into your tf folder
-
-```git clone --depth=1 https://github.com/fletchette/dez ./ && rm -rf ./.git && cp -r . /home/tf2server/serverfiles/tf && rm -rf ./*```
-
-
 #Todo:
-1. Move crabhat code to a separate plugin
-2. Make crabhat code less shit
+Some of this code makes me cry
