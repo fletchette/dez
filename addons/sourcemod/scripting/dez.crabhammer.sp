@@ -31,7 +31,8 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
 
-	RegConsoleCmd("sm_test", Command_Test);
+	RegConsoleCmd("sm_fletch", Command_FletchOne);
+	RegConsoleCmd("sm_fletchy", Command_FletchTwo);
 	
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -43,10 +44,29 @@ public OnPluginStart() {
 	}
 }
 
-public Action:Command_Test(client, args) {
-	if(IsValidClient(client)) {
-		CrabHat(client);
+public Action:Command_FletchOne(client, args) {
+	new entity = -1, pointer = -1;
+	decl String:strName[50];
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "crabShowdown") == 0) {
+			pointer = entity;
+			break;
+		}
 	}
+	
+	decl Float:min[3], Float:max[3], Float:origin[3];
+	if(pointer != -1) {
+		PrintToChatAll("Found ent");
+		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_FletchTwo(client, args) {
 	return Plugin_Handled;
 }
 
@@ -304,7 +324,6 @@ public Action:HandleCrabs(Handle:timer) {
 				
 				decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
 				if(pointer != -1) {
-					PrintToChatAll("Found ent");
 					GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 					GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
@@ -313,15 +332,15 @@ public Action:HandleCrabs(Handle:timer) {
 					//origin[1] += (min[1] + max[1]) * 0.5;
 					//origin[2] += (min[2] + max[2]) * 0.5;
 					
-					pos[2] = origin[2];
+					/*pos[2] = origin[2];
 					pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
-					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));
+					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));*/
 					
-					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[0], origin, NULL_VECTOR, NULL_VECTOR);
 					
-					pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
+					//pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
 					
-					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[1], origin, NULL_VECTOR, NULL_VECTOR);
 				}
 				
 			} else if(remainingPlayers == 1) {
