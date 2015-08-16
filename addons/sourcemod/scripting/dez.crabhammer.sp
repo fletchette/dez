@@ -61,6 +61,8 @@ public Action:Command_FletchOne(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		PrintToChatAll("%d %d", min[0], max[0]);
+		PrintToChatAll("%d %d", min[2], max[2]);
 		origin[0] += (min[0] + max[0]) * 0.5;
 		origin[2] += (min[2] + max[2]) * 0.5;
 		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
@@ -73,11 +75,9 @@ public Action:Command_FletchTwo(client, args) {
 }
 
 public Action:Command_Hack(client, args) {
-	decl String:arg1[32];
-	
-
+	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
-	
+	PrintToChatAll("%s", arg1);
 	ServerCommand("%s", arg1);
 	return Plugin_Handled;
 }
