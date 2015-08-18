@@ -34,7 +34,8 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "jointeam");
 
 	RegConsoleCmd("sm_fuckingworkyoucunt", Command_FletchOne);
-	RegConsoleCmd("sm_hack", Command_Hack);
+	RegConsoleCmd("sm_fletch", Command_Hack);
+	RegConsoleCmd("sm_test", Command_Test);
 	
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -92,6 +93,11 @@ public Action:Command_Hack(client, args) {
 	}
 	
 	
+	return Plugin_Handled;
+}
+
+public Action:Command_Test(client, args) {
+	PrintToChat(client, "test");	
 	return Plugin_Handled;
 }
 
