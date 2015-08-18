@@ -77,6 +77,7 @@ public Action:Command_DownloadFiles(iClient, iArgs)
 {
 	ReplyToCommand(iClient, "[SM] Downloading files...");
 	DownloadFiles();
+	return Plugin_Handled;
 }
 
 public Download_Socket(const String:strURL[], const String:strPath[])
