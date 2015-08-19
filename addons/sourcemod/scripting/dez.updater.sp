@@ -117,6 +117,7 @@ public OnSocketReceive(Handle:socket, String:strData[], const iSize, any:hDLPack
 	new iIndex;
 	SetPackPosition(hDLPack, 0);
 	new bool:bParsedHeader = bool:ReadPackCell(hDLPack);
+	PrintToChatAll("Received: %s", strData);
 	if(!bParsedHeader)
 	{
 		if((iIndex = StrContains(strData, "\r\n\r\n")) == -1)
@@ -167,12 +168,4 @@ stock ParseURL(const String:strURL[], String:strHost[], iMaxHost, String:strLoca
 		FormatEx(strLocation, iMaxLoc, "%s/%s", strLocation, strDirs[i]);
 
 	FormatEx(strFile, iMaxName, "%s", strDirs[iTotal - 1]);
-}
-
-stock PrefixURL(String:buffer[], maxlength, const String:strURL[])
-{
-	if(strncmp(strURL, "http://", 7) != 0)
-		FormatEx(buffer, maxlength, "http://%s", strURL);
-	else
-		strcopy(buffer, maxlength, strURL);
 }

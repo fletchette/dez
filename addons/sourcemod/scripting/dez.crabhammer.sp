@@ -33,21 +33,21 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
 
-	RegConsoleCmd("sm_fuckingworkyoucunt", Command_FletchOne);
+	RegConsoleCmd("sm_fuck", Command_TestOne);
+	RegConsoleCmd("sm_cunt", Command_TestTwo);
 	RegConsoleCmd("sm_fletch", Command_Hack);
-	RegConsoleCmd("sm_test", Command_Test);
-	
+
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
 	
 	//Hud
 	gHud = CreateHudSynchronizer();
 	if(gHud == INVALID_HANDLE) {
-		SetFailState("HUD synchronisation is not supported by this mod");
+		SetFailState("HUD synchronisation is not supported by this mod (fuck off)");
 	}
 }
 
-public Action:Command_FletchOne(client, args) {
+public Action:Command_TestOne(client, args) {
 	new entity = -1, pointer = -1;
 	decl String:strName[50];
 	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
@@ -63,16 +63,31 @@ public Action:Command_FletchOne(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		PrintToChatAll("Debug");
-		PrintToChatAll("Min X: %f", min[0]);
-		PrintToChatAll("Min Y: %f", min[1]);
-		PrintToChatAll("Min Z: %f", min[2]);
-		PrintToChatAll("Origin X: %f", origin[0]);
-		PrintToChatAll("Origin Y: %f", origin[1]);
-		PrintToChatAll("Origin Z: %f", origin[2]);
-		PrintToChatAll("Max X: %f", max[0]);
-		PrintToChatAll("Max Y: %f", max[1]);
-		PrintToChatAll("Max Z: %f", max[2]);
+		origin[0] += max[0] * 0.6;
+		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_TestTwo(client, args) {
+	new entity = -1, pointer = -1;
+	decl String:strName[50];
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "crabShowdown") == 0) {
+			pointer = entity;
+			break;
+		}
+	}
+	
+	decl Float:min[3], Float:max[3], Float:origin[3];
+	if(pointer != -1) {
+		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		origin[0] -= min[0] * 0.6;
+		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+
 	}
 	return Plugin_Handled;
 }
