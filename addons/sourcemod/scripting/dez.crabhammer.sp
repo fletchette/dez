@@ -373,7 +373,7 @@ public Action:HandleCrabs(Handle:timer) {
 					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 					
 					pos = origin;
-					pos[1] += min[1];
+					pos[2] += min[2];
 					
 					pos[0] += max[0] * 0.6;
 					
