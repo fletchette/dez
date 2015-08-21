@@ -373,11 +373,13 @@ public Action:HandleCrabs(Handle:timer) {
 					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 					
 					pos = origin;
+					pos[1] += min[1];
+					
 					pos[0] += max[0] * 0.6;
 					
 					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
 					
-					pos = origin;
+					pos[0] = origin[0];
 					pos[0] += min[0] * 0.6;
 					
 					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
