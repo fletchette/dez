@@ -375,12 +375,12 @@ public Action:HandleCrabs(Handle:timer) {
 					pos = origin;
 					pos[0] += max[0] * 0.6;
 					
-					TeleportEntity(g_Showdown[0], origin, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
 					
 					pos = origin;
 					pos[0] += min[0] * 0.6;
 					
-					TeleportEntity(g_Showdown[1], origin, NULL_VECTOR, NULL_VECTOR);
+					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
 				}
 				
 			} else if(remainingPlayers == 1) {
