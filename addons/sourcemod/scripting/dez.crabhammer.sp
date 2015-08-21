@@ -85,7 +85,7 @@ public Action:Command_TestTwo(client, args) {
 		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		origin[0] -= min[0] * 0.6;
+		origin[0] += min[0] * 0.6;
 		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
 
 	}
@@ -247,8 +247,6 @@ public ModifyCrabEvent() {
 }
 
 public Action:CountdownMessage(Handle:timer, any:counter) {
-	CreateTimer(5.0, StartCountdownFive);
-	/*
 	if(counter == 0) {
 		PrintHudCentreText("Take the teleport to the arena and accept the crab king's challenge", 8.0);
 		CreateTimer(10.0, CountdownMessage, 1);
@@ -258,7 +256,7 @@ public Action:CountdownMessage(Handle:timer, any:counter) {
 	} else if(counter == 2) {
 		PrintHudCentreText("30 seconds remaining", 4.0);
 		CreateTimer(25.0, StartCountdownFive);
-	}*/
+	}
 }
 
 public Action:StartCountdownFive(Handle:timer) {
@@ -374,17 +372,13 @@ public Action:HandleCrabs(Handle:timer) {
 					GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 					
-					//origin[0] += (min[0] + max[0]) * 0.5;
-					//origin[1] += (min[1] + max[1]) * 0.5;
-					//origin[2] += (min[2] + max[2]) * 0.5;
-					
-					/*pos[2] = origin[2];
-					pos[1] = origin[1] + (min[1] + ((max[1] - min[1]) / 2));
-					pos[0] = origin[0] + (min[0] + ((max[0] - min[0]) / 4));*/
+					pos = origin;
+					pos[0] += max[0] * 0.6;
 					
 					TeleportEntity(g_Showdown[0], origin, NULL_VECTOR, NULL_VECTOR);
 					
-					//pos[0] = origin[0] + ((min[0] + ((max[0] - min[0]) / 4)) * 3);
+					pos = origin;
+					pos[0] += min[0] * 0.6;
 					
 					TeleportEntity(g_Showdown[1], origin, NULL_VECTOR, NULL_VECTOR);
 				}
