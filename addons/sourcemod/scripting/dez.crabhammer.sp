@@ -214,9 +214,13 @@ public Action:CountdownFive(Handle:timer) {
 	static counter = 5;
 	if(counter < 1) {
 		counter = 5;
-		g_SpycrabEventStatus = 2;
-		CreateTimer(7.0, StartCrab, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-		CreateTimer(1.0, FreezeCrabbers);
+		if(g_PlayersInSpycrab > 2) {
+			g_SpycrabEventStatus = 2;
+			CreateTimer(7.0, StartCrab, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(1.0, FreezeCrabbers);
+		} else {
+			PrintHudCentreText("Tournament cancelled", 4.0);
+		}
 		return Plugin_Stop;
 	}
 	
@@ -307,11 +311,11 @@ public Action:HandleCrabs(Handle:timer) {
 				Format(buffer, sizeof(buffer), "%s vs %s - first to three spycrabs loses", nameOne, nameTwo);
 				PrintHudCentreText(buffer, 4.0);
 				
-				TeleportToShowdown(g_Showdown[0], 0);
-				TeleportToShowdown(g_Showdown[1], 1);
-				
 				Unfreeze(g_Showdown[0]);
 				Unfreeze(g_Showdown[1]);
+				
+				TeleportToShowdown(g_Showdown[0], 0);
+				TeleportToShowdown(g_Showdown[1], 1);
 				
 			} else if(remainingPlayers == 1) {
 				for(new client=0; client<MaxClients; client++) {
