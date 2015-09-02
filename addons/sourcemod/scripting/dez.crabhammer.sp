@@ -239,6 +239,12 @@ public Action:FreezeCrabbers(Handle:timer) {
 	}
 }
 
+public Unfreeze(client) {
+	if(IsValidClient(client)) { 
+		SetEntityMoveType(client, MOVETYPE_WALK);
+	}
+}
+
 public Action:StartCrab(Handle:timer) {
 	if(g_SpycrabEventStatus > 1) {
 		for(new client=0; client<MaxClients; client++) {
@@ -303,6 +309,9 @@ public Action:HandleCrabs(Handle:timer) {
 				
 				TeleportToShowdown(g_Showdown[0], 0);
 				TeleportToShowdown(g_Showdown[1], 1);
+				
+				Unfreeze(g_Showdown[0]);
+				Unfreeze(g_Showdown[1]);
 				
 			} else if(remainingPlayers == 1) {
 				for(new client=0; client<MaxClients; client++) {
@@ -376,7 +385,7 @@ public TeleportToShowdown(client, side) { //0=Left, 1=Right
 		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
 		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
 		
-		origin[2] += min[2];
+		origin[2] += min[2] / 2;
 		origin[0] += (side == 0 ? max[0] : min[0]) * 0.6;
 		
 		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
