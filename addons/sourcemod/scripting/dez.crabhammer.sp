@@ -155,6 +155,7 @@ public LeaveCrab(client) {
 	if(g_Spycrabbing[client]) {
 		if(g_SpycrabEventStatus < 3 && !IsClientInShowdown(client)) {
 			ResetVars(client);
+			g_Spycrabbing[client] = false;
 			g_PlayersInSpycrab--;
 		}
 	}
@@ -356,7 +357,6 @@ public SpycrabWinner(client) {
 }
 
 public ResetVars(client) {
-	g_Spycrabbing[client] = false;
 	g_AllowTaunt[client] = false;	
 	g_Spycrabs[client] = 0;
 }
