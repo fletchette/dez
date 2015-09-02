@@ -35,6 +35,7 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "explode");
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
+	AddCommandListener(Event_Suicide, "joinclass");
 
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -169,18 +170,6 @@ public IsClientInShowdown(client) {
 public DenyCrabEntry(client) {
 	ForcePlayerSuicide(client);
 	PrintCenterText(client, "A tournament is already under way");
-}
-
-public ResetVars(client) {
-	g_Spycrabbing[client] = false;
-	g_AllowTaunt[client] = false;	
-	g_Spycrabs[client] = 0;
-}
-
-public ResetVarsAll() {
-	for(new client=0; client<MaxClients; client++) {
-		ResetVars(client);	
-	}
 }
 
 public ModifyCrabEvent() {
@@ -358,11 +347,24 @@ public Action:HandleCrabs(Handle:timer) {
 }
 
 public SpycrabWinner(client) {
+	g_PlayersInSpycrab -= 2;
 	TeleportToWinner(client);
 	decl String:name[64], String:buffer[90];
 	GetClientName(client, name, 64);
 	Format(buffer, sizeof(buffer), "%s is the new spycrab king!", name);
 	PrintHudCentreText(buffer, 4.0);
+}
+
+public ResetVars(client) {
+	g_Spycrabbing[client] = false;
+	g_AllowTaunt[client] = false;	
+	g_Spycrabs[client] = 0;
+}
+
+public ResetVarsAll() {
+	for(new client=0; client<MaxClients; client++) {
+		ResetVars(client);	
+	}
 }
 
 public ResetCrab() {

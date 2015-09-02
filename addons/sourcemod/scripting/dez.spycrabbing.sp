@@ -49,7 +49,6 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
 
 //When dey touch le spycrabbing room
 public OnStartTouchCrabbing(entity, client) {
-	PrintToChatAll("%d touchy", client);
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		g_Spycrabbing[client] = true;
 		if(TF2_GetPlayerClass(client) != TFClass_Spy) { //If dey no spy
@@ -73,7 +72,6 @@ public OnStartTouchCrabbing(entity, client) {
 
 //When they stop touching the crabbing box 
 public OnStopTouchCrabbing(entity, client) {
-	PrintToChatAll("%d no touchy", client);
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		g_Spycrabbing[client] = false;
 		TF2_RegeneratePlayer(client); //Give them back all their weapons.
