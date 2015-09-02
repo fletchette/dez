@@ -220,6 +220,7 @@ public Action:CountdownFive(Handle:timer) {
 			CreateTimer(1.0, FreezeCrabbers);
 		} else {
 			PrintHudCentreText("Tournament cancelled", 4.0);
+			ResetCrab();
 		}
 		return Plugin_Stop;
 	}
