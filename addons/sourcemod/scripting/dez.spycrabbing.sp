@@ -49,6 +49,10 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
 
 //When dey touch le spycrabbing room
 public OnStartTouchCrabbing(entity, client) {
+	RequestFrame(OnStartTouchCrabbingPost, client);
+}
+
+public OnStartTouchCrabbingPost(client) {
 	PrintToChatAll("%d touchy", client);
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		g_Spycrabbing[client] = true;
@@ -70,6 +74,7 @@ public OnStartTouchCrabbing(entity, client) {
 		ClientCommand(client, "slot4"); //Force them to equip kit
 	}
 }
+
 
 //When they stop touching the crabbing box 
 public OnStopTouchCrabbing(entity, client) {

@@ -15,7 +15,7 @@ ConVar g_Enabled;
 
 new Handle:gHud;
 
-new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...};
+new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...}; //Touching one of the spycrabbing ents
 new bool:g_AllowTaunt[MAXPLAYERS+1] = {false, ...};
 new g_Spycrabs[MAXPLAYERS+1] = {0, ...};
 
