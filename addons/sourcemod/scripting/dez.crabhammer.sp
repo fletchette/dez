@@ -249,7 +249,7 @@ public Action:FreezeCrabbers(Handle:timer) {
 	for(new client=0; client<MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(g_Spycrabbing[client]) {
-				SetEntityMoveType(client, MOVETYPE_VPHYSICS);
+				SetEntityMoveType(client, MOVETYPE_STEP);
 			}
 		}
 	}

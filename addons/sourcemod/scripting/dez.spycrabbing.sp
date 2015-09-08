@@ -20,8 +20,8 @@ public OnPluginStart() {
 		return;
 	}
 	
-	RegConsoleCmd("disguise", Event_Disguise);
-	RegConsoleCmd("lastdisguise", Event_Disguise);
+	AddCommandListener(Event_Disguise, "disguise");
+	AddCommandListener(Event_Disguise, "lastdisguise");
 	
 	//Random weapon switching shit
 	StartPrepSDKCall(SDKCall_Player);
@@ -41,7 +41,7 @@ public OnClientDisconnect(client) { //Incase they disconnect while spycrabbing? 
 }
 
 //When a condition is added..
-public TF2_OnConditionAdded(client, TFCond:condition) { //Stop anyone who's spycrabbing from disguising. Those bastards
+public TF2_OnConditionAdded(client, TFCond:condition) {
 	if(g_Spycrabbing[client]) {
 		if(condition == TFCond_HalloweenKart) {
 			TF2_RemoveCondition(client, TFCond_HalloweenKart); //Fuck off with your shit carts you cunts
@@ -49,7 +49,7 @@ public TF2_OnConditionAdded(client, TFCond:condition) { //Stop anyone who's spyc
 	}
 }
 
-public Action:Event_Disguise(client, args) {
+public Action:Event_Disguise(client, const String:strCommand[], args) {
 	PrintToChatAll("Disgussited");
 	if(g_Spycrabbing[client]) {
 		PrintToChatAll("BLOCKING");
