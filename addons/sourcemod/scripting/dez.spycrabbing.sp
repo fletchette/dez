@@ -51,6 +51,7 @@ public TF2_OnConditionAdded(client, TFCond:condition) { //Stop anyone who's spyc
 
 public Action:Event_Disguise(client, args) {
 	if(g_Spycrabbing[client]) {
+		PrintToChatAll("BLOCKING");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
