@@ -331,7 +331,7 @@ public Action:HandleCrabs(Handle:timer) {
 				
 				TeleportToShowdown(g_Showdown[0], 0);
 				TeleportToShowdown(g_Showdown[1], 1);
-				CreateTimer(1.0, FreezeCrabbers);
+				CreateTimer(0.5, FreezeCrabbers);
 			} else {
 				PrintToChatAll("Error #1 :(");
 				ResetCrab();

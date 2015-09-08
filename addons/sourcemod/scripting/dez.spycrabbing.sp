@@ -38,9 +38,14 @@ public OnClientDisconnect(client) { //Incase they disconnect while spycrabbing? 
 
 //When a condition is added..
 public TF2_OnConditionAdded(client, TFCond:condition) { //Stop anyone who's spycrabbing from disguising. Those bastards
-	if(g_Spycrabbing[client] && condition == TFCond_Disguised) {
-		TF2_RemovePlayerDisguise(client);
+	if(g_Spycrabbing[client]) {
+		if(condition == TFCond_Disguised) {
+			TF2_RemovePlayerDisguise(client);
+		} else if(condition == TFCond_HalloweenKart) {
+			TF2_RemoveCondition(client, TFCond_HalloweenKart); //Fuck off with your shit carts you cunts
+		}
 	}
+	
 }
 
 //When a player spawns..
