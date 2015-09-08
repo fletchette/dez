@@ -14,9 +14,18 @@ public OnPluginStart() {
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	
+	new Handle:hConf = LoadGameConfigFile("sdkhooks.games");
+	if(hConf == INVALID_HANDLE)	{
+		SetFailState("Could not read sdkhooks.games gamedata.");
+		return;
+	}
+	
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "Weapon_Switch");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	g_hSDKWeaponSwitch = EndPrepSDKCall();
-	if(g_hSDKWeaponSwitch == INVALID_HANDLE)
-	{
+	if(g_hSDKWeaponSwitch == INVALID_HANDLE) {
 		SetFailState("Could not initialize call for CTFPlayer::Weapon_Switch");
 		return;
 	}
