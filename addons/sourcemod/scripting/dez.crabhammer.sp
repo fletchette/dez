@@ -8,6 +8,17 @@
 #define BRUSH_CRABWINNER "kingcrab"
 #define BRUSH_CRABSHOWDOWN "crabShowdown"
 
+#define PLUGIN_VERSION "0.1.1"
+
+public Plugin:myinfo =
+{
+	name = "Crabhammer",
+	author = "fletch",
+	description = "",
+	version = PLUGIN_VERSION,
+	url = ""
+}
+
 ConVar g_cEnabled;
 
 new Handle:gHud;
@@ -324,6 +335,7 @@ public Action:HandleCrabs(Handle:timer) {
 		} else if(remainingPlayers == 1) {
 			for(new client=0; client<MaxClients; client++) {
 				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+					g_SpycrabEventStatus = 0;
 					SpycrabWinner(client);
 				}
 			}
