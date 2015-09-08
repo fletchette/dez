@@ -20,6 +20,10 @@ public OnPluginStart() {
 		return;
 	}
 	
+	RegConsoleCmd("disguise", Event_Disguise);
+	RegConsoleCmd("lastdisguise", Event_Disguise);
+	
+	//Random weapon switching shit
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "Weapon_Switch");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
@@ -39,13 +43,17 @@ public OnClientDisconnect(client) { //Incase they disconnect while spycrabbing? 
 //When a condition is added..
 public TF2_OnConditionAdded(client, TFCond:condition) { //Stop anyone who's spycrabbing from disguising. Those bastards
 	if(g_Spycrabbing[client]) {
-		if(condition == TFCond_Disguised) {
-			TF2_RemovePlayerDisguise(client);
-		} else if(condition == TFCond_HalloweenKart) {
+		if(condition == TFCond_HalloweenKart) {
 			TF2_RemoveCondition(client, TFCond_HalloweenKart); //Fuck off with your shit carts you cunts
 		}
 	}
-	
+}
+
+public Action:Event_Disguise(client, args) {
+	if(g_Spycrabbing[client]) {
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
 }
 
 //When a player spawns..
