@@ -6,12 +6,20 @@
 #include <tf2>
 #include <tf2_stocks>
 
+new Handle:g_hSDKWeaponSwitch;
 new bool:g_Spycrabbing[MAXPLAYERS+1] = {false, ...}; //Stores whether bitches be spycrabbing
 
 //When the plugin starts..
 public OnPluginStart() {
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("player_spawn", Event_PlayerSpawn);
+	
+	g_hSDKWeaponSwitch = EndPrepSDKCall();
+	if(g_hSDKWeaponSwitch == INVALID_HANDLE)
+	{
+		SetFailState("Could not initialize call for CTFPlayer::Weapon_Switch");
+		return;
+	}
 }
 
 //When a client disconnects..
@@ -53,7 +61,6 @@ public OnStartTouchCrabbing(entity, client) {
 }
 
 public OnStartTouchCrabbingPost(client) {
-	PrintToChatAll("%d touchy", client);
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		g_Spycrabbing[client] = true;
 		if(TF2_GetPlayerClass(client) != TFClass_Spy) { //If dey no spy
@@ -64,21 +71,16 @@ public OnStartTouchCrabbingPost(client) {
 				TF2_RemovePlayerDisguise(client); //DON'T FUCKING RUN INTO SPYCRAB WITH A DISGUISE OK?
 			}
 		}
-		for(new i=0; i<6; i++) { //Loop through deir weaponz
-			if(GetPlayerWeaponSlot(client, i) != -1) { //If dey have weapon in dis slot
-				TF2_RemoveWeaponSlot(client, i); //Tell it to go fuck itself
-			}
-		}
-		new item = GivePlayerItem(client, "tf_weapon_pda_spy");
-		EquipPlayerWeapon(client, item);
-		ClientCommand(client, "slot4"); //Force them to equip kit
+		TF2_RemoveAllWeapons(client);
+		new weapon = GivePlayerItem(client, "tf_weapon_pda_spy");
+		EquipPlayerWeapon(client, weapon);
+		SetActiveWeapon(client, weapon);
 	}
 }
 
 
 //When they stop touching the crabbing box 
 public OnStopTouchCrabbing(entity, client) {
-	PrintToChatAll("%d no touchy", client);
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		g_Spycrabbing[client] = false;
 		TF2_RegeneratePlayer(client); //Give them back all their weapons.
@@ -93,4 +95,8 @@ stock bool:IsValidClient(iClient, bool:bReplay = true) {
 	if(bReplay && (IsClientSourceTV(iClient) || IsClientReplay(iClient)))
 		return false;
 	return true;
+}
+
+SetActiveWeapon(client, weapon) {
+	SDKCall(g_hSDKWeaponSwitch, client, weapon, 0);
 }

@@ -141,7 +141,9 @@ public OnStartTouchCrab(entity, client) {
 }
 
 public OnStopTouchCrab(entity, client) {
-	LeaveCrab(client);
+	if(!IsClientInShowdown(client)) {
+		LeaveCrab(client);
+	}
 }
 
 public OnClientDisconnect(client) {
@@ -158,29 +160,24 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
 public JoinCrab(client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		if(!g_Spycrabbing[client]) {
-			PrintToChatAll("[Debug] %d has joined the crab", client);
 			//If the spycrab hasn't started yet
-				//Or it has and they are in the showdown
 			if(g_SpycrabEventStatus < 2) {
 				g_Spycrabbing[client] = true;
 				g_PlayersInSpycrab++;
+				CheckCrabEventStart();
 			} else {
 				DenyCrabEntry(client);
 			}
 		}
-		CheckCrabEventStart();
 	}
 }
 
 public LeaveCrab(client) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
-			if(!IsClientInShowdown(client)) {
-				PrintToChatAll("[Debug] %d has left the crab", client);
-				ResetVars(client);
-				g_Spycrabbing[client] = false;
-				g_PlayersInSpycrab--;
-			}
+			ResetVars(client);
+			g_Spycrabbing[client] = false;
+			g_PlayersInSpycrab--;
 		}
 	}
 }
@@ -283,30 +280,36 @@ public Action:TauntCrabbers(Handle:timer) {
 
 public Action:HandleCrabs(Handle:timer) {
 	//Calculate remaining players
-	new remainingPlayers = 0;
-	if(g_SpycrabEventStatus == 2) {
-		new counter = 0;
-		for(new client=0; client<MaxClients; client++) {
-			if(g_Spycrabs[client] > 0) {
-				counter++;
+
+	for(new client=0; client<MaxClients; client++) {
+		if(IsValidClient(client)) {
+			if(g_SpycrabEventStatus == 2) {
+				if(g_Spycrabbing[client]) {
+					if(g_Spycrabs[client] > 0) {
+						ForcePlayerSuicide(client);
+					}
+				}
+			} else if(g_SpycrabEventStatus == 3) {
+				if(g_Spycrabbing[client]) {
+					if(IsClientInShowdown(client)) {
+						if(g_Spycrabs[client] > 2) {
+							ForcePlayerSuicide(client);
+						}
+					}
+				}
 			}
 		}
-		remainingPlayers = g_PlayersInSpycrab - counter;
-	} else if(g_SpycrabEventStatus == 3) {
-		remainingPlayers = 2;
-		if(g_Spycrabs[g_Showdown[0]] > 2) {
-			remainingPlayers--;
-		}
-		if(g_Spycrabs[g_Showdown[1]] > 2) {
-			remainingPlayers--;
-		}
 	}
+	
+
+	PrintToChatAll("RemainingPlayers: %d", g_PlayersInSpycrab);
+	
 		
 	if(g_SpycrabEventStatus == 2) {
-		if(remainingPlayers == 2) {
+		if(g_PlayersInSpycrab == 2) {
 			decl String:nameOne[64], String:nameTwo[64], String:buffer[162];
 			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+				if(g_Spycrabbing[client]) {
 					if(g_Showdown[0] == -1) {
 						g_Showdown[0] = client;
 						GetClientName(client, nameOne, 64);
@@ -334,52 +337,30 @@ public Action:HandleCrabs(Handle:timer) {
 				ResetCrab();
 			}
 			
-		} else if(remainingPlayers == 1) {
+		} else if(g_PlayersInSpycrab == 1) {
 			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+				if(g_Spycrabbing[client]) {
 					g_SpycrabEventStatus = 0;
 					SpycrabWinner(client);
 				}
 			}
 			ResetCrab();
-		} else if(remainingPlayers < 1) {
-			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabbing[client]) {
-					PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
-				}
-			}
+		} else if(g_PlayersInSpycrab < 1) {
+			PrintHudCentreText("Don't buy a lottery ticket..", 5.0);
 			ResetCrab();
 		}
-		//Kill eliminated players
-		for(new client=0; client<MaxClients; client++) {
-			if(g_Spycrabs[client] > 0) {
-				ForcePlayerSuicide(client);
-			}
-		}
 	} else if(g_SpycrabEventStatus == 3) { //Showdown mode
-		if(remainingPlayers < 2) {
-			//The game has ended, so we reset this so that LeaveCrab works correctly
-			g_SpycrabEventStatus = 0;
-		}
-		
-		if(remainingPlayers == 1) {
-			if(g_Spycrabs[g_Showdown[0]] < 3) { //g_Showdown[0] won
-				ForcePlayerSuicide(g_Showdown[1]);
+		if(g_PlayersInSpycrab == 1) {
+			if(g_Spycrabbing[g_Showdown[0]]) { //g_Showdown[0] won
 				SpycrabWinner(g_Showdown[0]);
 			} else {
-				ForcePlayerSuicide(g_Showdown[0]);
 				SpycrabWinner(g_Showdown[1]);
 			}
-		} else if(remainingPlayers == 0) {
-			for(new client=0; client<MaxClients; client++) {
-				if(client == g_Showdown[0] || client == g_Showdown[1]) {
-					PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
-					ForcePlayerSuicide(client);
-				}
-			}
+		} else if(g_PlayersInSpycrab == 0) {
+			PrintHudCentreText("Don't buy a lottery ticket..", 5.0);
 		}
 		
-		if(remainingPlayers < 2) {
+		if(g_PlayersInSpycrab < 2) {
 			ResetCrab();
 		}
 	} else {
