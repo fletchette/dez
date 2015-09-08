@@ -99,7 +99,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
 			if(buttons & IN_JUMP) {
-				return Plugin_Handled;
+				//return Plugin_Handled;
 			}
 		}
 	}
@@ -249,7 +249,7 @@ public Action:FreezeCrabbers(Handle:timer) {
 	for(new client=0; client<MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(g_Spycrabbing[client]) {
-				SetEntityMoveType(client, MOVETYPE_NONE);
+				SetEntityMoveType(client, MOVETYPE_VPHYSICS);
 			}
 		}
 	}
