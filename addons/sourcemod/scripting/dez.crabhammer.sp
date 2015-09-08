@@ -11,7 +11,7 @@
 #define BRUSH_CRABWINNER "kingcrab"
 #define BRUSH_CRABSHOWDOWN "crabShowdown"
 
-ConVar g_Enabled;
+ConVar g_cEnabled;
 
 new Handle:gHud;
 
@@ -23,6 +23,8 @@ new g_PlayersInSpycrab = 0; //The number of players currently spycrabbing, no ma
 new g_SpycrabEventStatus = 0; //Inactive, Counting Down, In Progress, Showdown
 
 new g_Showdown[2] = {-1, -1}; //This struct stores the two players in the showdown
+
+new bool:g_Enabled = true;
 
 //Events
 
@@ -38,7 +40,7 @@ public OnPluginStart() {
 	AddCommandListener(Event_Suicide, "joinclass");
 
 	//Cvars
-	g_Enabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
+	g_cEnabled = CreateConVar("sm_dez_crabhammer_enabled", "1", "Enables/Disables the plugin");
 	
 	//Hud
 	gHud = CreateHudSynchronizer();
@@ -52,17 +54,25 @@ public OnMapStart() {
 }
 
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast) {
-	new i = -1;
+	new i = -1,
+		bool:found = false;
+	
 	decl String:strName[50];
+	
 	while((i = FindEntityByClassname(i, "trigger_multiple")) != -1) {
 		GetEntPropString(i, Prop_Data, "m_iName", strName, sizeof(strName));
 		if(StrEqual(strName, BRUSH_CRABHAMMER)) {
+			found = true;
 			SDKHook(i, SDKHook_StartTouchPost, OnStartTouchCrab);
 			SDKHook(i, SDKHook_EndTouch, OnStopTouchCrab);
 		}
 	}
+	if(!found) {
+		g_Enabled = false;
+	}
 }
 
+//Prevent spycrabbers from taunting
 public Action:Event_Taunt(client, const String:strCommand[], args) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
@@ -76,6 +86,7 @@ public Action:Event_Taunt(client, const String:strCommand[], args) {
 	return Plugin_Continue;
 }
 
+//Prevent spycrabbers from jumping
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon, &subtype, &cmdnum, &tickcount, &seed, mouse[2]) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
@@ -87,6 +98,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	return Plugin_Continue;
 }
 
+//Prevent spycrabbers from suiciding
 public Action:Event_Suicide(client, const String:strCommand[], iArgs) {
     if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
@@ -117,15 +129,11 @@ public OnSceneSpawned(entity) {
 //Tracking crabbers
 
 public OnStartTouchCrab(entity, client) {
-	if(IsValidClient(client) && IsPlayerAlive(client)) {
-		JoinCrab(client);
-	}
+	JoinCrab(client);
 }
 
 public OnStopTouchCrab(entity, client) {
-	if(IsValidClient(client) && IsPlayerAlive(client)) {
-		LeaveCrab(client);
-	}
+	LeaveCrab(client);
 }
 
 public OnClientDisconnect(client) {
@@ -140,30 +148,38 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
 //Functions
 
 public JoinCrab(client) {
-	if(!g_Spycrabbing[client]) {
-		if(g_SpycrabEventStatus < 2 || (g_SpycrabEventStatus == 3 && IsClientInShowdown(client))) {
-			g_Spycrabbing[client] = true;
-			g_PlayersInSpycrab++;
-		} else {
-			DenyCrabEntry(client);
+	if(IsValidClient(client) && IsPlayerAlive(client)) {
+		if(!g_Spycrabbing[client]) {
+			//If the spycrab hasn't started yet
+				//Or it has and they are in the showdown
+			if(g_SpycrabEventStatus < 2) {
+				g_Spycrabbing[client] = true;
+				g_PlayersInSpycrab++;
+			} else {
+				DenyCrabEntry(client);
+			}
 		}
+		CheckCrabEventStart();
 	}
-	ModifyCrabEvent();
 }
 
 public LeaveCrab(client) {
-	if(g_Spycrabbing[client]) {
-		if(g_SpycrabEventStatus < 3 && !IsClientInShowdown(client)) {
-			ResetVars(client);
-			g_Spycrabbing[client] = false;
-			g_PlayersInSpycrab--;
+	if(IsValidClient(client)) {
+		if(g_Spycrabbing[client]) {
+			if(!IsClientInShowdown(client)) {
+				ResetVars(client);
+				g_Spycrabbing[client] = false;
+				g_PlayersInSpycrab--;
+			}
 		}
 	}
 }
 
 public IsClientInShowdown(client) {
-	if(client == g_Showdown[0] || client == g_Showdown[1]) {
-		return true;
+	if(g_SpycrabEventStatus == 3) {
+		if(client == g_Showdown[0] || client == g_Showdown[1]) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -173,7 +189,7 @@ public DenyCrabEntry(client) {
 	PrintCenterText(client, "A tournament is already under way");
 }
 
-public ModifyCrabEvent() {
+public CheckCrabEventStart() {
 	if(g_SpycrabEventStatus == 0) {
 		if(g_PlayersInSpycrab > 1) {
 			g_SpycrabEventStatus = 1;
@@ -192,12 +208,10 @@ public Action:CountdownMessage(Handle:timer, any:counter) {
 		CreateTimer(30.0, CountdownMessage, 2);
 	} else if(counter == 2) {
 		PrintHudCentreText("30 seconds remaining", 4.0);
-		CreateTimer(25.0, StartCountdownFive);
+		CreateTimer(25.0, CountdownMessage, 3);
+	} else if(counter == 3) {
+		CreateTimer(1.0, CountdownFive, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
-}
-
-public Action:StartCountdownFive(Handle:timer) {
-	CreateTimer(1.0, CountdownFive, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action:CountdownFive(Handle:timer) {
@@ -206,7 +220,7 @@ public Action:CountdownFive(Handle:timer) {
 		counter = 5;
 		if(g_PlayersInSpycrab > 2) {
 			g_SpycrabEventStatus = 2;
-			CreateTimer(7.0, StartCrab, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(7.0, TauntCrabbers, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			CreateTimer(1.0, FreezeCrabbers);
 		} else {
 			PrintHudCentreText("Tournament cancelled", 4.0);
@@ -240,7 +254,7 @@ public Unfreeze(client) {
 	}
 }
 
-public Action:StartCrab(Handle:timer) {
+public Action:TauntCrabbers(Handle:timer) {
 	if(g_SpycrabEventStatus > 1) {
 		for(new client=0; client<MaxClients; client++) {
 			if(IsValidClient(client)) {
@@ -258,6 +272,7 @@ public Action:StartCrab(Handle:timer) {
 }
 
 public Action:HandleCrabs(Handle:timer) {
+	//Calculate remaining players
 	new remainingPlayers = 0;
 	if(g_SpycrabEventStatus == 2) {
 		new counter = 0;
@@ -277,26 +292,22 @@ public Action:HandleCrabs(Handle:timer) {
 		}
 	}
 		
-	if(remainingPlayers < 3) {
-		if(g_SpycrabEventStatus == 2) {
+	if(g_SpycrabEventStatus == 2) {
+		if(remainingPlayers == 2) {
+			decl String:nameOne[64], String:nameTwo[64], String:buffer[162];
 			for(new client=0; client<MaxClients; client++) {
-				if(g_Spycrabs[client] > 0) {
-					ForcePlayerSuicide(client);
-				}
-			}
-			if(remainingPlayers == 2) {
-				decl String:nameOne[64], String:nameTwo[64], String:buffer[162];
-				for(new client=0; client<MaxClients; client++) {
-					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
-						if(g_Showdown[0] == -1) {
-							g_Showdown[0] = client;
-							GetClientName(client, nameOne, 64);
-						} else {
-							g_Showdown[1] = client;
-							GetClientName(client, nameTwo, 64);
-						}
+				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+					if(g_Showdown[0] == -1) {
+						g_Showdown[0] = client;
+						GetClientName(client, nameOne, 64);
+					} else {
+						g_Showdown[1] = client;
+						GetClientName(client, nameTwo, 64);
 					}
 				}
+			}
+			
+			if(IsValidClient(g_Showdown[0]) && IsValidClient(g_Showdown[1])) {
 				g_SpycrabEventStatus = 3;
 				
 				Format(buffer, sizeof(buffer), "%s vs %s - first to three spycrabs loses", nameOne, nameTwo);
@@ -307,48 +318,66 @@ public Action:HandleCrabs(Handle:timer) {
 				
 				TeleportToShowdown(g_Showdown[0], 0);
 				TeleportToShowdown(g_Showdown[1], 1);
-				
-			} else if(remainingPlayers == 1) {
-				for(new client=0; client<MaxClients; client++) {
-					if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
-						SpycrabWinner(client);
-					}
-				}
-				ResetCrab();
-			} else if(remainingPlayers < 1) {
-				for(new client=0; client<MaxClients; client++) {
-					if(g_Spycrabbing[client]) {
-						PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
-					}
-				}
+				CreateTimer(1.0, FreezeCrabbers);
+			} else {
+				PrintToChatAll("Error #1 :(");
 				ResetCrab();
 			}
-		} else if(g_SpycrabEventStatus == 3) { //Showdown mode
-			if(remainingPlayers == 1) {
-				if(g_Spycrabs[g_Showdown[0]] < 3) { //g_Showdown[0] won
-					ForcePlayerSuicide(g_Showdown[1]);
-					SpycrabWinner(g_Showdown[0]);
-				} else {
-					ForcePlayerSuicide(g_Showdown[0]);
-					SpycrabWinner(g_Showdown[1]);
-				}
-			} else if(remainingPlayers == 0) {
-				for(new client=0; client<MaxClients; client++) {
-					if(client == g_Showdown[0] || client == g_Showdown[1]) {
-						PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
-						ForcePlayerSuicide(client);
-					}
+			
+		} else if(remainingPlayers == 1) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabbing[client] && g_Spycrabs[client] == 0) {
+					SpycrabWinner(client);
 				}
 			}
-			if(remainingPlayers < 2) {
-				ResetCrab();
+			ResetCrab();
+		} else if(remainingPlayers < 1) {
+			for(new client=0; client<MaxClients; client++) {
+				if(g_Spycrabbing[client]) {
+					PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
+				}
+			}
+			ResetCrab();
+		}
+		//Kill eliminated players
+		for(new client=0; client<MaxClients; client++) {
+			if(g_Spycrabs[client] > 0) {
+				ForcePlayerSuicide(client);
 			}
 		}
+	} else if(g_SpycrabEventStatus == 3) { //Showdown mode
+		if(remainingPlayers < 2) {
+			//The game has ended, so we reset this so that LeaveCrab works correctly
+			g_SpycrabEventStatus = 0;
+		}
+		
+		if(remainingPlayers == 1) {
+			if(g_Spycrabs[g_Showdown[0]] < 3) { //g_Showdown[0] won
+				ForcePlayerSuicide(g_Showdown[1]);
+				SpycrabWinner(g_Showdown[0]);
+			} else {
+				ForcePlayerSuicide(g_Showdown[0]);
+				SpycrabWinner(g_Showdown[1]);
+			}
+		} else if(remainingPlayers == 0) {
+			for(new client=0; client<MaxClients; client++) {
+				if(client == g_Showdown[0] || client == g_Showdown[1]) {
+					PrintHudCentreTextClient(client, "Don't buy a lottery ticket..", 5.0);
+					ForcePlayerSuicide(client);
+				}
+			}
+		}
+		
+		if(remainingPlayers < 2) {
+			ResetCrab();
+		}
+	} else {
+		PrintToChatAll("Unknown error #2 :(");
+		ResetCrab();
 	}
 }
 
 public SpycrabWinner(client) {
-	g_PlayersInSpycrab -= 2;
 	TeleportToWinner(client);
 	decl String:name[64], String:buffer[90];
 	GetClientName(client, name, 64);
