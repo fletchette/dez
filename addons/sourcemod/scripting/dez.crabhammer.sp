@@ -351,6 +351,7 @@ public Action:HandleCrabs(Handle:timer) {
 		}
 	} else if(g_SpycrabEventStatus == 3) { //Showdown mode
 		if(g_PlayersInSpycrab == 1) {
+			g_SpycrabEventStatus = 0;
 			if(g_Spycrabbing[g_Showdown[0]]) { //g_Showdown[0] won
 				SpycrabWinner(g_Showdown[0]);
 			} else {
