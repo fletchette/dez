@@ -62,6 +62,8 @@ public OnStartTouchCrabbing(entity, client) {
 
 public OnStartTouchCrabbingPost(client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
+		TF2_RemoveCondition(client, TFCond_HalloweenKart); //Fuck off with your shit carts you cunts
+		TF2_RemoveCondition(client, TFCond_Taunting); //Fuck off with your conga you cunts
 		g_Spycrabbing[client] = true;
 		if(TF2_GetPlayerClass(client) != TFClass_Spy) { //If dey no spy
 			TF2_SetPlayerClass(client, TFClass_Spy); //Fuck em, they spy now lel
