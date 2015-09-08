@@ -158,6 +158,7 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
 public JoinCrab(client) {
 	if(IsValidClient(client) && IsPlayerAlive(client)) {
 		if(!g_Spycrabbing[client]) {
+			PrintToChatAll("[Debug] %d has joined the crab", client);
 			//If the spycrab hasn't started yet
 				//Or it has and they are in the showdown
 			if(g_SpycrabEventStatus < 2) {
@@ -175,6 +176,7 @@ public LeaveCrab(client) {
 	if(IsValidClient(client)) {
 		if(g_Spycrabbing[client]) {
 			if(!IsClientInShowdown(client)) {
+				PrintToChatAll("[Debug] %d has left the crab", client);
 				ResetVars(client);
 				g_Spycrabbing[client] = false;
 				g_PlayersInSpycrab--;
@@ -387,6 +389,7 @@ public Action:HandleCrabs(Handle:timer) {
 }
 
 public SpycrabWinner(client) {
+	Unfreeze(client);
 	TeleportToWinner(client);
 	decl String:name[64], String:buffer[90];
 	GetClientName(client, name, 64);
