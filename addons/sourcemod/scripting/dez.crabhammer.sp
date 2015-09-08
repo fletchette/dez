@@ -4,9 +4,6 @@
 #include <sdkhooks>
 #include <sdktools>
 
-#define MAX_AUTHID_LENGTH 20
-#define FLETCH "STEAM_0:1:60546866"
-
 #define BRUSH_CRABHAMMER "crabHammer"
 #define BRUSH_CRABWINNER "kingcrab"
 #define BRUSH_CRABSHOWDOWN "crabShowdown"
