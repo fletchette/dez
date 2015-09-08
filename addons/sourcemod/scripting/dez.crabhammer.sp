@@ -8,7 +8,7 @@
 #define BRUSH_CRABWINNER "kingcrab"
 #define BRUSH_CRABSHOWDOWN "crabShowdown"
 
-#define PLUGIN_VERSION "0.1.1"
+#define PLUGIN_VERSION "0.1.5"
 
 public Plugin:myinfo =
 {
