@@ -14,14 +14,14 @@ public OnPluginStart() {
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	
+	AddCommandListener(Event_Disguise, "kill");
+	//AddCommandListener(Event_Disguise, "lastdisguise");
+	
 	new Handle:hConf = LoadGameConfigFile("sdkhooks.games");
 	if(hConf == INVALID_HANDLE)	{
 		SetFailState("Could not read sdkhooks.games gamedata.");
 		return;
 	}
-	
-	AddCommandListener(Event_Disguise, "disguise");
-	AddCommandListener(Event_Disguise, "lastdisguise");
 	
 	//Random weapon switching shit
 	StartPrepSDKCall(SDKCall_Player);
@@ -53,7 +53,7 @@ public Action:Event_Disguise(client, const String:strCommand[], args) {
 	PrintToChatAll("Disgussited");
 	if(g_Spycrabbing[client]) {
 		PrintToChatAll("BLOCKING");
-		return Plugin_Handled;
+		return Plugin_Stop;
 	}
 	return Plugin_Continue;
 }
