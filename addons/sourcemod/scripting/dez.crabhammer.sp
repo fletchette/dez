@@ -101,6 +101,10 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			if(buttons & IN_JUMP) {
 				//return Plugin_Handled;
 			}
+			if(impulse & 1 << 3) {
+				PrintToChatAll("Disguising");
+				return Plugin_Handled;
+			}
 		}
 	}
 	return Plugin_Continue;

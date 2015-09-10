@@ -14,9 +14,6 @@ public OnPluginStart() {
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	
-	AddCommandListener(Event_Disguise, "kill");
-	//AddCommandListener(Event_Disguise, "lastdisguise");
-	
 	new Handle:hConf = LoadGameConfigFile("sdkhooks.games");
 	if(hConf == INVALID_HANDLE)	{
 		SetFailState("Could not read sdkhooks.games gamedata.");
@@ -47,15 +44,6 @@ public TF2_OnConditionAdded(client, TFCond:condition) {
 			TF2_RemoveCondition(client, TFCond_HalloweenKart); //Fuck off with your shit carts you cunts
 		}
 	}
-}
-
-public Action:Event_Disguise(client, const String:strCommand[], args) {
-	PrintToChatAll("Disgussited");
-	if(g_Spycrabbing[client]) {
-		PrintToChatAll("BLOCKING");
-		return Plugin_Stop;
-	}
-	return Plugin_Continue;
 }
 
 //When a player spawns..
